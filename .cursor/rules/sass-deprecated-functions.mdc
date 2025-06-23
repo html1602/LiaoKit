@@ -1,0 +1,159 @@
+---
+description: 
+globs: *.scss,,*.vue
+alwaysApply: false
+---
+# Sass 已弃用函数替换规则
+
+## 规则说明
+
+Sass 已经弃用了一些旧的全局函数，这些函数将在 Dart Sass 3.0.0 中被移除。本规则文件提供正确的替代方案。
+
+> **重要提示**: 本项目的 `vite.config.ts` 已全局引入 `@use "sass:color"` 模块，因此在组件中使用颜色函数时**无需**再次引入该模块。
+
+## 颜色函数替换
+
+### 1. darken() 和 lighten() 函数
+
+这些函数已弃用，应该使用 `color.adjust()` 或 `color.scale()` 替代。
+
+#### 错误用法:
+```scss
+background-color: darken($color, 10%);
+color: lighten($color, 15%);
+```
+
+#### 正确用法:
+```scss
+// 方法一：使用 color.adjust()
+background-color: color.adjust($color, $lightness: -10%);
+color: color.adjust($color, $lightness: 15%);
+
+// 方法二：使用 color.scale() (更准确但复杂)
+background-color: color.scale($color, $lightness: -10%);
+color: color.scale($color, $lightness: 15%);
+```
+
+### 2. saturate() 和 desaturate() 函数
+
+这些函数已弃用，应该使用 `color.adjust()` 或 `color.scale()` 替代。
+
+#### 错误用法:
+```scss
+color: saturate($color, 20%);
+background-color: desaturate($color, 30%);
+```
+
+#### 正确用法:
+```scss
+// 方法一：使用 color.adjust()
+color: color.adjust($color, $saturation: 20%);
+background-color: color.adjust($color, $saturation: -30%);
+
+// 方法二：使用 color.scale()
+color: color.scale($color, $saturation: 20%);
+background-color: color.scale($color, $saturation: -30%);
+```
+
+### 3. fade-in() (opacify) 和 fade-out() (transparentize) 函数
+
+这些函数已弃用，应该使用 `color.adjust()` 替代。
+
+#### 错误用法:
+```scss
+background-color: fade-in($color, 0.2);
+background-color: opacify($color, 0.2);
+border-color: fade-out($color, 0.3);
+border-color: transparentize($color, 0.3);
+```
+
+#### 正确用法:
+```scss
+background-color: color.adjust($color, $alpha: 0.2);
+border-color: color.adjust($color, $alpha: -0.3);
+```
+
+### 4. mix() 函数
+
+mix() 函数已弃用，应该使用 `color.mix()` 替代。
+
+#### 错误用法:
+```scss
+color: mix($color1, $color2, 30%);
+```
+
+#### 正确用法:
+```scss
+color: color.mix($color1, $color2, 30%);
+```
+
+## 其他全局函数
+
+### 1. map-get() 函数
+
+map-get() 函数将被弃用，应该使用 `map.get()` 替代。
+
+#### 错误用法:
+```scss
+$value: map-get($map, $key);
+```
+
+#### 正确用法:
+```scss
+@use "sass:map";
+$value: map.get($map, $key);
+```
+
+### 2. list 相关函数
+
+list 相关函数将被弃用，应该使用对应的命名空间函数替代。
+
+#### 错误用法:
+```scss
+$first: nth($list, 1);
+$length: length($list);
+```
+
+#### 正确用法:
+```scss
+@use "sass:list";
+$first: list.nth($list, 1);
+$length: list.length($list);
+```
+
+## 常见问题解决
+
+1. 确保在 vite.config.ts 或 webpack 配置中全局注入必要的 Sass 模块:
+
+```typescript
+// vite.config.ts 例子
+export default defineConfig({
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `
+          @use "sass:color";
+          @use "sass:map";
+          @use "sass:list";
+          @use "sass:math";
+          @use "sass:string";
+          // 其他需要的模块...
+        `
+      }
+    }
+  }
+})
+```
+
+2. 如果无法全局注入，请确保在每个 SCSS 文件顶部导入必要的模块:
+
+```scss
+@use "sass:color";
+@use "sass:map";
+// 其他需要的模块...
+
+.my-class {
+  color: color.adjust($primary-color, $lightness: -10%);
+}
+```
+

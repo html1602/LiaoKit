@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+每次更新根据不同的内容,完成以下文档编写:
+- @Docs/AskLog/YYYY-MM-DD_topic.md - 提问日志，用于按日期记录与AI的交互
+- @Docs/DevLog/YYYY-MM-DD_progress.md - 开发日志，用于按日期记录进度、问题和解决方案
+- @Docs/Feature/[feature-name]_rules.md - 功能规则文档，包含设计思路和实现具体细节，确保方便后期重构或迭代开发时快速熟悉功能细节
+- @Docs/DevEnvConfig.md - 开发环境配置文档，在项目开始前，创建该文档用于记录如何从零开始搭建开发环境，确保环境一致性
+- @Docs/ChangeLog.md - 版本变更日志，按语义化版本组织
+- @Docs/FeatureMap.md - 功能地图，包含功能间依赖关系和链接，可视化展示功能之间的关系和依赖
+- @Docs/FAQ.md - 常见问题解答，按主题分类
+- @Docs/TechDebt.md - 技术债务跟踪，记录待优化点
+
+
+- 每次迭代都需要更新README.md文件，包括快速启动指南、功能说明和优化建议，不包括数据库定义。

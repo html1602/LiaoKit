@@ -1,0 +1,108 @@
+// LiaoKit 变量定义 - 遵循UI详细设计规范
+@use "sass:color";
+
+// 主题色 
+$primary-color: #2669FF; // 品牌主色
+$secondary-color: #0C1A30; // 深灰蓝辅助色
+$success-color: #00B578; // 成功色
+$warning-color: #FEA308; // 警告色
+$danger-color: #F45C43; // 错误色
+$error-color: $danger-color; // 错误色别名，保持兼容性
+$info-color: #808080; // 辅助说明色
+$disabled-color: #CCCCCC; // 禁用状态颜色
+
+// 文本颜色
+$text-primary: #1A1A1A; // 主要文本色
+$text-secondary: #808080; // 辅助说明文本色
+$text-tertiary: #BFBFBF; // 三级文本色，与disabled色保持一致
+$text-disabled: #BFBFBF; // 弱化文本色
+
+// 背景颜色
+$bg-primary: #FFFFFF; // 主背景色
+$bg-secondary: #F5F7FA; // 次要背景色/浅灰色
+$bg-tertiary: #FAFBFC; // 三级背景色，更浅的灰色
+$bg-highlight: #ECF2FF; // 高亮背景色
+
+// 边框颜色
+$border-color: #ECEEF2; // 边框色
+$border-color-focus: $primary-color; // 聚焦边框色
+$border-color-card: #E3E6EB; // 卡片边框色，符合UI规范
+
+// 尺寸与间距
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-lg: 16px;
+$spacing-xl: 20px;
+$spacing-xxl: 24px;
+
+// 字体大小
+$font-size-xs: 12px; // 说明字/时间戳
+$font-size-sm: 13px; // 副标题/附注
+$font-size-md: 16px; // 气泡正文/输入
+$font-size-lg: 18px; // 大标题
+$font-size-xl: 24px; // 超大标题/数字展示
+$font-size-2xl: 28px; // 超大数值展示
+
+// 字重
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-bold: 600;
+
+// 字体族
+$font-family-mono: 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace; // 等宽字体
+
+// 边框圆角
+$border-radius-xs: 4px; // 超小圆角
+$border-radius-sm: 8px;
+$border-radius-md: 12px; // 气泡/按钮
+$border-radius-lg: 16px; // 卡片/窗口
+$border-radius-pill: 24px; // 输入框/胶囊形状
+$border-radius-circle: 50%;
+
+// 消息气泡
+$bubble-bg-self: $primary-color; // 自己发送的气泡背景色
+$bubble-text-self: #FFFFFF; // 自己发送的气泡文本色
+$bubble-bg-other: $bg-primary; // 他人发送的气泡背景色
+$bubble-border-other: $border-color; // 他人发送的气泡边框色
+$bubble-radius: $border-radius-md;
+$bubble-padding-x: 16px; // 气泡内左右边距
+$bubble-padding-y: 10px; // 气泡内上下边距
+$bubble-max-width: 85%; // 气泡最大宽度
+
+// 输入区
+$input-height: 52px; // 输入区高度
+$input-radius: $border-radius-pill; // 输入框圆角
+$input-border-color: $border-color; // 输入框边框色
+$input-border-color-focus: $primary-color; // 输入框聚焦边框色
+$input-padding-x: 16px; // 输入框内左右边距
+$input-padding-y: 12px; // 输入框内上下边距
+
+// 头部区域
+$header-height: 60px; // 头部区域高度
+$header-bg: $primary-color; // 头部区域背景色
+$header-text: #FFFFFF; // 头部区域文本色
+
+// 图标尺寸
+$icon-size-sm: 18px;
+$icon-size-md: 20px;
+$icon-size-lg: 24px;
+$icon-size-xl: 32px; // xlarge尺寸
+$avatar-size: 40px; // 头像尺寸
+
+// 动画
+$transition-duration: 0.2s;
+$transition-duration-fast: 0.15s;
+$transition-timing-function: ease-in-out;
+
+// 阴影
+$shadow-sm: 0 2px 4px rgba(210, 213, 218, 0.08);
+$shadow-md: 0 4px 8px rgba(210, 213, 218, 0.12);
+$shadow-lg: 0 8px 16px rgba(210, 213, 218, 0.16);
+
+// 窗口尺寸
+$window-min-width: 320px; // 最小宽度
+$window-default-width: 400px; // 默认宽度
+$window-max-width: 1200px; // 最大宽度
+$window-min-height: 500px; // 最小高度
+$window-default-height: 600px; // 默认高度 
