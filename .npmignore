@@ -1,0 +1,50 @@
+# 开发环境文件
+.vscode/
+.cursor/
+node_modules/
+.git/
+.gitignore
+
+# 源代码（只发布构建后的文件）
+src/
+public/
+temp_backup/
+
+# 构建和开发工具
+vite.config.ts
+tsconfig.*.json
+tsconfig.json
+components.d.ts
+*.html
+*.md
+!README.md
+!CHANGELOG.md
+
+# 日志和缓存
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+
+# 环境文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 文档目录
+Docs/
+@Docs/
+
+# 测试文件
+tests/
+*.test.ts
+*.spec.ts
+
+# 其他
+*.tgz
+.DS_Store
+Thumbs.db 

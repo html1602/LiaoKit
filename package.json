@@ -1,12 +1,54 @@
 {
-  "name": "liaokit",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@yuandezuohua/liaokit",
+  "private": false,
+  "version": "2.7.0",
+  "description": "LiaoKit - 现代化Vue3组件库，支持AI智能消息适配和多窗口系统",
   "type": "module",
+  "main": "./dist/liaokit.umd.js",
+  "module": "./dist/liaokit.es.js",
+  "types": "./dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "import": "./dist/liaokit.es.js",
+      "require": "./dist/liaokit.umd.js"
+    },
+    "./dist/style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "vue3",
+    "components",
+    "ui-library",
+    "typescript",
+    "ai-adapter",
+    "multi-window",
+    "liaokit"
+  ],
+  "author": "LiaoKit Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/html1602/LiaoKit.git"
+  },
+  "homepage": "https://github.com/html1602/LiaoKit#readme",
+  "bugs": {
+    "url": "https://github.com/html1602/LiaoKit/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "build:lib": "vite build --mode library",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
   },
   "dependencies": {
     "@antv/g2plot": "^2.4.33",
