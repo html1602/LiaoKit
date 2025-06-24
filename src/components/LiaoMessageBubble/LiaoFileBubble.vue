@@ -1479,11 +1479,11 @@ const renderMarkdown = async (content: string): Promise<string> => {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #666;
+      color: #333;
       
       &:hover {
-        background: rgba(0, 0, 0, 0.06);
-        color: #333;
+        background: rgba(0, 0, 0, 0.1);
+        color: #000;
       }
     }
   }

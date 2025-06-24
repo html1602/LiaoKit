@@ -135,23 +135,44 @@ const handleMaximize = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: $border-radius-sm;
-    margin-left: $spacing-xs;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    margin-left: 4px;
     cursor: pointer;
-    transition: all $transition-duration $transition-timing-function;
-    color: $header-text;
+    transition: all 0.2s ease;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0;
     
     &:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: white;
+      transform: scale(1.05);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+    
+    &:focus {
+      outline: none;
       background-color: rgba(255, 255, 255, 0.2);
     }
   }
   
   &-close {
     &:hover {
-      background-color: $danger-color;
+      background-color: #ff4757;
       color: white;
+      transform: scale(1.05);
+    }
+    
+    &:active {
+      background-color: #ff3742;
+      transform: scale(0.95);
     }
   }
 }

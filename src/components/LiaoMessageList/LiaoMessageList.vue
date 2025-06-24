@@ -2,6 +2,27 @@
   <div class="liao-message-list-wrapper" ref="wrapperRef">
     <div class="liao-message-list liao-scrollable" ref="messageListRef">
       <slot name="before"></slot>
+      
+      <!-- AI 适配处理状态 -->
+      <div v-if="useAiAdapter && adapterProcessing" class="liao-message-list-ai-loading">
+        <slot name="ai-loading">
+          <div class="liao-message-list-ai-loading-indicator">
+            <LiaoIcon name="loading" spin />
+            <span>AI 正在处理消息格式...</span>
+          </div>
+        </slot>
+      </div>
+      
+      <!-- AI 适配错误提示 -->
+      <div v-if="useAiAdapter && adapterError" class="liao-message-list-ai-error">
+        <slot name="ai-error" :error="adapterError">
+          <div class="liao-message-list-ai-error-content">
+            <LiaoIcon name="warning" />
+            <span>AI 消息适配失败: {{ adapterError }}</span>
+          </div>
+        </slot>
+      </div>
+      
       <div v-if="loading" class="liao-message-list-loading">
         <slot name="loading">
           <div class="liao-message-list-loading-indicator">
@@ -11,7 +32,7 @@
       </div>
       
       <!-- 空状态 -->
-      <div v-if="messages.length === 0 && !loading" class="liao-message-list-empty">
+      <div v-if="adaptedMessages.length === 0 && !loading && !adapterProcessing" class="liao-message-list-empty">
         <slot name="empty">
           <div class="liao-message-list-empty-text">{{ emptyText }}</div>
         </slot>
@@ -187,7 +208,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed, nextTick, readonly } from 'vue';
 import type { PropType } from 'vue';
 import LiaoMessageBubble from '../LiaoMessageBubble/LiaoMessageBubble.vue';
 import LiaoImageBubble from '../LiaoMessageBubble/LiaoImageBubble.vue';
@@ -196,6 +217,8 @@ import LiaoQuickActionBar from '../LiaoQuickActionBar/LiaoQuickActionBar.vue';
 import LiaoPluginBubble from '../LiaoMessageBubble/LiaoPluginBubble.vue';
 import LiaoFileBubble from '../LiaoMessageBubble/LiaoFileBubble.vue';
 import { formatDate } from '../../utils/date/index.ts';
+import { useAiMessageAdapter } from '../../ai-adapter';
+import type { AiAdapterOptions, CustomFormatFunction } from '../../ai-adapter';
 
 // 消息类型定义
 export interface Message {
@@ -294,6 +317,27 @@ const props = defineProps({
   unreadCount: {
     type: Number,
     default: 0
+  },
+  // AI 消息适配相关 props
+  useAiAdapter: {
+    type: Boolean,
+    default: false
+  },
+  aiAdapterOptions: {
+    type: Object as PropType<AiAdapterOptions>,
+    default: () => ({})
+  },
+  customFormat: {
+    type: Function as PropType<CustomFormatFunction>,
+    default: undefined
+  },
+  enableAdapterCache: {
+    type: Boolean,
+    default: true
+  },
+  adapterTimeout: {
+    type: Number,
+    default: 5000
   }
 });
 
@@ -312,7 +356,11 @@ const emit = defineEmits([
   'file-download',
   'file-click',
   'file-retry',
-  'file-more'
+  'file-more',
+  // AI 适配相关事件
+  'adapter-success',
+  'adapter-error',
+  'adapter-fallback'
 ]);
 
 const messageListRef = ref<HTMLElement | null>(null);
@@ -328,17 +376,120 @@ const showNewMessageTip = ref(false);
 const newMessageCount = ref(0);
 const newMessagesStartIndex = ref(-1); // 记录新消息起始索引
 
-// 按日期对消息分组
+// AI 适配器状态
+const adaptedMessages = ref<Message[]>([]);
+const adapterProcessing = ref(false);
+const adapterError = ref<string | null>(null);
+
+// 初始化 AI 适配器
+const { 
+  loading: aiAdapterLoading, 
+  error: aiAdapterError, 
+  stats: aiAdapterStats,
+  adaptMessage,
+  adaptMessages: adaptMessagesAsync,
+  updateOptions,
+  clearCache
+} = useAiMessageAdapter(
+  props.useAiAdapter ? {
+    enabled: true,
+    enableCache: props.enableAdapterCache,
+    timeoutMs: props.adapterTimeout,
+    ...props.aiAdapterOptions
+  } : { enabled: false }
+);
+
+// 处理消息适配
+const processMessages = async (rawMessages: Message[]) => {
+  if (!props.useAiAdapter) {
+    adaptedMessages.value = rawMessages;
+    return;
+  }
+
+  adapterProcessing.value = true;
+  adapterError.value = null;
+
+  try {
+    console.log('🤖 开始 AI 消息适配，消息数量:', rawMessages.length);
+    
+    const results = await adaptMessagesAsync(rawMessages, props.customFormat);
+    
+    adaptedMessages.value = results
+      .filter(result => result.success && result.message)
+      .map(result => result.message!);
+
+    // 处理失败的消息
+    const failedCount = results.filter(result => !result.success).length;
+    if (failedCount > 0) {
+      console.warn(`⚠️ ${failedCount} 条消息适配失败，使用兜底方案`);
+      emit('adapter-fallback', { failedCount, total: rawMessages.length });
+    }
+
+    // 发射成功事件
+    emit('adapter-success', {
+      processed: results.length,
+      cached: results.filter(r => r.fromCache).length,
+      stats: aiAdapterStats
+    });
+
+    console.log('✅ AI 消息适配完成');
+    
+  } catch (error) {
+    console.error('❌ AI 消息适配出错:', error);
+    adapterError.value = error instanceof Error ? error.message : '适配失败';
+    
+    // 适配失败时使用原始消息
+    adaptedMessages.value = rawMessages;
+    
+    emit('adapter-error', { error: adapterError.value, originalMessages: rawMessages });
+  } finally {
+    adapterProcessing.value = false;
+  }
+};
+
+// 监听消息变化，触发适配
+watch(
+  () => props.messages,
+  async (newMessages) => {
+    await processMessages(newMessages);
+  },
+  { immediate: true, deep: true }
+);
+
+// 监听 AI 适配配置变化
+watch(
+  [() => props.useAiAdapter, () => props.aiAdapterOptions],
+  () => {
+    if (props.useAiAdapter) {
+      updateOptions({
+        enabled: true,
+        enableCache: props.enableAdapterCache,
+        timeoutMs: props.adapterTimeout,
+        ...props.aiAdapterOptions
+      });
+      // 重新处理消息
+      processMessages(props.messages);
+    } else {
+      // 禁用适配时直接使用原始消息
+      adaptedMessages.value = props.messages;
+    }
+  },
+  { deep: true }
+);
+
+// 按日期对消息分组 - 使用适配后的消息
 const messageGroups = computed(() => {
+  const messagesToGroup = adaptedMessages.value;
+  
   if (!props.showDateDivider) {
-    return [{ date: '', messages: props.messages }];
+    return [{ date: '', messages: messagesToGroup }];
   }
   
   const groups: MessageGroup[] = [];
   let currentDate = '';
   let currentGroup: Message[] = [];
   
-  props.messages.forEach(message => {
+  messagesToGroup.forEach(message => {
     // 获取消息日期
     const messageTime = message.time ? new Date(message.time) : new Date();
     const messageDate = formatDate(messageTime, props.dateDividerFormat);
@@ -530,11 +681,11 @@ const scrollToFirstNewMessage = () => {
   }
 };
 
-// 监听消息变化
+// 监听消息变化 - 使用适配后的消息
 watch(
-  () => props.messages.length, // 直接监听数组长度变化，确保触发
+  () => adaptedMessages.value.length, // 监听适配后的消息数组长度变化
   (newLength, oldLength) => {
-    // console.log('消息数组长度变化:', { newLength, oldLength });
+    // console.log('适配后消息数组长度变化:', { newLength, oldLength });
     
     // 仅在有新增消息时处理
     if (newLength <= oldLength) {
@@ -551,7 +702,7 @@ watch(
     // console.log('是否在底部:', atBottom);
     
     // 检查最新消息是否是自己发送的
-    const isSelfMessage = props.messages[newLength - 1]?.isSelf;
+    const isSelfMessage = adaptedMessages.value[newLength - 1]?.isSelf;
     // console.log('是自己的消息吗:', isSelfMessage);
     
     if (atBottom || isSelfMessage) {
@@ -655,20 +806,35 @@ onUnmounted(() => {
 
 // 暴露方法和状态
 defineExpose({
+  // 原有方法和状态
   scrollToBottom: scrollToBottomFn,
-  shouldAutoScroll, // 暴露自动滚动状态
-  showNewMessageTip, // 暴露新消息提示显示状态
-  newMessageCount, // 暴露新消息计数
-  newMessagesStartIndex // 暴露新消息起始索引
+  shouldAutoScroll,
+  showNewMessageTip,
+  newMessageCount,
+  newMessagesStartIndex,
+  
+  // AI 适配相关方法和状态
+  adaptedMessages: readonly(adaptedMessages),
+  adapterProcessing: readonly(adapterProcessing),
+  adapterError: readonly(adapterError),
+  aiAdapterStats: readonly(aiAdapterStats),
+  
+  // AI 适配器控制方法
+  processMessages,
+  updateAdapterOptions: updateOptions,
+  clearAdapterCache: clearCache,
+  
+  // 手动触发适配
+  adaptSingleMessage: adaptMessage,
 });
 
-// 监听消息变化，设置文件对象
+// 监听消息变化，设置文件对象 - 使用适配后的消息
 watch(
-  () => props.messages,
+  () => adaptedMessages.value,
   (newMessages) => {
     // 等待下一次更新后设置文件对象
     nextTick(() => {
-      console.log('🔍 [文件对象设置] 开始处理消息列表:', newMessages.length);
+      console.log('🔍 [文件对象设置] 开始处理适配后消息列表:', newMessages.length);
       
       // 找到所有文件类型的消息
       const fileMessages = newMessages.filter(message => message.type === 'file');
@@ -738,6 +904,55 @@ watch(
     
     &-indicator {
       color: $text-secondary;
+    }
+  }
+  
+  // AI 适配状态样式
+  &-ai-loading {
+    display: flex;
+    justify-content: center;
+    padding: $spacing-sm 0;
+    margin: $spacing-xs 0;
+    
+    &-indicator {
+      display: flex;
+      align-items: center;
+      color: $primary-color;
+      font-size: $font-size-xs;
+      
+      .liao-icon {
+        margin-right: $spacing-xs;
+        color: $primary-color;
+      }
+      
+      span {
+        color: $text-secondary;
+      }
+    }
+  }
+  
+  &-ai-error {
+    display: flex;
+    justify-content: center;
+    padding: $spacing-sm $spacing-md;
+    margin: $spacing-xs 0;
+    background-color: rgba($danger-color, 0.1);
+    border-radius: $border-radius-md;
+    
+    &-content {
+      display: flex;
+      align-items: center;
+      color: $danger-color;
+      font-size: $font-size-xs;
+      
+      .liao-icon {
+        margin-right: $spacing-xs;
+        color: $danger-color;
+      }
+      
+      span {
+        color: $danger-color;
+      }
     }
   }
   

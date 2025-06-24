@@ -4,6 +4,7 @@ import type { App, Component } from 'vue';
 import LiaoApp from './components/LiaoApp/LiaoApp.vue';
 import LiaoWindow from './components/LiaoWindow/LiaoWindow.vue';
 import LiaoWindowHeader from './components/LiaoWindowHeader/LiaoWindowHeader.vue';
+import LiaoWindowList from './components/LiaoWindowList/LiaoWindowList.vue';
 import LiaoMessageList from './components/LiaoMessageList/LiaoMessageList.vue';
 import LiaoMessageBubble from './components/LiaoMessageBubble/LiaoMessageBubble.vue';
 import LiaoTextBubble from './components/LiaoMessageBubble/LiaoTextBubble.vue';
@@ -13,6 +14,7 @@ import LiaoInputArea from './components/LiaoInputArea/LiaoInputArea.vue';
 import LiaoQuickActionBar from './components/LiaoQuickActionBar/LiaoQuickActionBar.vue';
 import LiaoIcon from './components/LiaoIcon/LiaoIcon.vue';
 import LiaoEmojiPicker from './components/LiaoEmojiPicker/LiaoEmojiPicker.vue';
+import LiaoButton from './components/LiaoButton/LiaoButton.vue';
 
 // 导入内置插件
 import {
@@ -67,6 +69,7 @@ const components = {
   LiaoApp,
   LiaoWindow,
   LiaoWindowHeader,
+  LiaoWindowList,
   LiaoMessageList,
   LiaoMessageBubble,
   LiaoTextBubble,
@@ -75,7 +78,8 @@ const components = {
   LiaoInputArea,
   LiaoQuickActionBar,
   LiaoIcon,
-  LiaoEmojiPicker
+  LiaoEmojiPicker,
+  LiaoButton
 };
 
 // 预先注册所有内置插件，确保在任何组件初始化前插件已注册
@@ -142,6 +146,7 @@ export {
   LiaoApp,
   LiaoWindow,
   LiaoWindowHeader,
+  LiaoWindowList,
   LiaoMessageList,
   LiaoMessageBubble,
   LiaoTextBubble,
@@ -151,6 +156,7 @@ export {
   LiaoQuickActionBar,
   LiaoIcon,
   LiaoEmojiPicker,
+  LiaoButton,
   
   // 内置插件
   LiaoFaqCardPlugin,

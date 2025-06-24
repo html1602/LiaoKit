@@ -143,7 +143,7 @@ const activePlugin = ref<ActivePlugin | null>(null);
 const lockReason = ref<LockReason>(null);
 
 // 自动解锁定时器
-let autoUnlockTimer: number | null = null;
+let autoUnlockTimer: ReturnType<typeof setTimeout> | null = null;
 
 // 锁定输入
 const lockInput = (reason: LockReason, plugin?: ActivePlugin) => {

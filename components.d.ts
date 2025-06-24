@@ -10,6 +10,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     LiaoActionsPlugin: typeof import('./src/components/LiaoPlugins/LiaoActionsPlugin.vue')['default']
     LiaoApp: typeof import('./src/components/LiaoApp/LiaoApp.vue')['default']
+    LiaoButton: typeof import('./src/components/LiaoButton/LiaoButton.vue')['default']
     LiaoEmojiPicker: typeof import('./src/components/LiaoEmojiPicker/LiaoEmojiPicker.vue')['default']
     LiaoFaqCardPlugin: typeof import('./src/components/LiaoPlugins/LiaoFaqCardPlugin.vue')['default']
     LiaoFileBubble: typeof import('./src/components/LiaoMessageBubble/LiaoFileBubble.vue')['default']
@@ -36,6 +37,7 @@ declare module 'vue' {
     LiaoVotePlugin: typeof import('./src/components/LiaoPlugins/LiaoVotePlugin.vue')['default']
     LiaoWindow: typeof import('./src/components/LiaoWindow/LiaoWindow.vue')['default']
     LiaoWindowHeader: typeof import('./src/components/LiaoWindowHeader/LiaoWindowHeader.vue')['default']
+    LiaoWindowList: typeof import('./src/components/LiaoWindowList/LiaoWindowList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

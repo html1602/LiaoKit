@@ -995,7 +995,7 @@ watch(() => props.files, (newFiles) => {
   height: 32px;
   border: none;
   background: none;
-  color: $text-secondary;
+  color: #333;
   cursor: pointer;
   border-radius: $border-radius-sm;
   display: flex;
@@ -1004,8 +1004,8 @@ watch(() => props.files, (newFiles) => {
   transition: all 0.2s ease;
   
   &:hover {
-    background-color: $bg-secondary;
-    color: $text-primary;
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #000;
   }
 }
 

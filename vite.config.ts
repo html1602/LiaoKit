@@ -46,6 +46,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'vue': 'vue/dist/vue.esm-bundler.js', // 使用包含模板编译器的完整版本
     },
   },
   server: {

@@ -100,6 +100,71 @@
           </button>
         </div>
         
+        <!-- 多窗口管理展示 -->
+        <div v-if="activeComponentTab === 'windows'" class="liao-showcase-component-container">
+          <h3>多窗口聊天管理</h3>
+          <div class="liao-showcase-window-demo">
+            <LiaoWindowList
+              ref="windowListRef"
+              :max-window-count="5"
+              :auto-create-first="true"
+              :default-layout="'free'"
+              :mobile-breakpoint="768"
+              @window-created="handleWindowCreated"
+              @window-closed="handleWindowClosed"
+            >
+              <template #window-content="{ window, isActive, sessionData }">
+                <div class="liao-showcase-window-content">
+                  <!-- 消息列表区域 -->
+                  <div class="liao-showcase-window-messages">
+                    <LiaoMessageList
+                      :messages="getWindowMessages(window.id)"
+                      :loading="false"
+                      :unread-count="window.unreadCount"
+                    />
+                  </div>
+                  
+                  <!-- 输入区域 -->
+                  <div class="liao-showcase-window-input">
+                    <LiaoInputArea
+                      :model-value="getWindowInputValue(window.id)"
+                      @update:model-value="updateWindowInput(window.id, $event)"
+                      @send="handleWindowSend(window.id, $event)"
+                      :placeholder="`在${window.title}中输入消息...`"
+                      :disabled="!isActive"
+                    />
+                  </div>
+                </div>
+              </template>
+            </LiaoWindowList>
+          </div>
+          
+          <div class="liao-showcase-window-controls">
+            <h4>窗口操作演示</h4>
+            <div class="liao-showcase-control-buttons">
+              <button @click="createDemoWindow">创建演示窗口</button>
+              <button @click="simulateUnreadMessage">模拟未读消息</button>
+              <button @click="toggleLayoutMode">切换布局模式</button>
+              <button @click="clearAllWindows">清空所有窗口</button>
+            </div>
+            
+            <!-- 完整预览链接 -->
+            <div class="liao-showcase-preview-link">
+              <a href="/window-preview" target="_blank" class="liao-showcase-full-preview-btn">
+                <span>🚀 查看完整多窗口预览演示</span>
+                <small>体验完整的企业级多窗口管理功能</small>
+              </a>
+            </div>
+            
+            <div class="liao-showcase-window-stats">
+              <p>当前窗口数: {{ windowStats.totalWindows }}</p>
+              <p>活跃窗口: {{ windowStats.activeWindow || '无' }}</p>
+              <p>未读消息: {{ windowStats.unreadCount }}</p>
+              <p>当前布局: {{ windowStats.currentLayout }}</p>
+            </div>
+          </div>
+        </div>
+        
         <!-- 消息气泡展示 -->
         <div v-if="activeComponentTab === 'bubbles'" class="liao-showcase-component-container">
           <h3>文本气泡</h3>
@@ -486,6 +551,184 @@
             <pre>{{ fileOperationResult }}</pre>
           </div>
         </div>
+        
+        <!-- AI智能消息适配器展示 -->
+        <div v-if="activeComponentTab === 'ai-adapter'" class="liao-showcase-component-container">
+          <h3>🤖 AI智能消息格式适配器</h3>
+          <div class="liao-showcase-ai-adapter-intro">
+            <p class="liao-showcase-description">
+              AI智能消息格式适配器是 LiaoKit v2.6.0 的核心新功能，它能够自动识别并转换各种业务侧的消息格式为组件可用的统一格式。
+              通过集成通义千问大模型，实现智能化的消息格式适配，大幅简化了组件集成的复杂度。
+            </p>
+            
+            <div class="liao-showcase-ai-features">
+              <div class="liao-showcase-feature-item">
+                <div class="liao-showcase-feature-icon">🧠</div>
+                <div class="liao-showcase-feature-content">
+                  <h4>智能识别</h4>
+                  <p>自动识别各种消息格式，无需手动配置转换规则</p>
+                </div>
+              </div>
+              <div class="liao-showcase-feature-item">
+                <div class="liao-showcase-feature-icon">⚡</div>
+                <div class="liao-showcase-feature-content">
+                  <h4>高性能缓存</h4>
+                  <p>LRU 缓存机制避免重复转换，显著提升性能</p>
+                </div>
+              </div>
+              <div class="liao-showcase-feature-item">
+                <div class="liao-showcase-feature-icon">🛡️</div>
+                <div class="liao-showcase-feature-content">
+                  <h4>可靠兜底</h4>
+                  <p>AI 失败时自动启用本地适配器，确保功能稳定</p>
+                </div>
+              </div>
+              <div class="liao-showcase-feature-item">
+                <div class="liao-showcase-feature-icon">🔧</div>
+                <div class="liao-showcase-feature-content">
+                  <h4>灵活配置</h4>
+                  <p>支持自定义 API、超时、重试等多种参数配置</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- AI适配器完整演示 -->
+          <div class="liao-showcase-ai-adapter-demo">
+            <h4>完整功能演示</h4>
+            <div class="liao-showcase-ai-demo-container">
+              <AiMessageAdapterExample />
+            </div>
+          </div>
+          
+          <!-- 技术特性说明 -->
+          <div class="liao-showcase-ai-tech-specs">
+            <h4>技术特性</h4>
+            <div class="liao-showcase-tech-grid">
+              <div class="liao-showcase-tech-item">
+                <h5>🔗 API 集成</h5>
+                <ul>
+                  <li>支持通义千问 API</li>
+                  <li>可配置的 API 端点</li>
+                  <li>自定义请求头支持</li>
+                  <li>灵活的模型选择</li>
+                </ul>
+              </div>
+              <div class="liao-showcase-tech-item">
+                <h5>📦 缓存系统</h5>
+                <ul>
+                  <li>LRU 算法实现</li>
+                  <li>可配置缓存大小</li>
+                  <li>自动过期清理</li>
+                  <li>缓存命中统计</li>
+                </ul>
+              </div>
+              <div class="liao-showcase-tech-item">
+                <h5>🔄 重试机制</h5>
+                <ul>
+                  <li>可配置重试次数</li>
+                  <li>指数退避策略</li>
+                  <li>超时控制</li>
+                  <li>错误分类处理</li>
+                </ul>
+              </div>
+              <div class="liao-showcase-tech-item">
+                <h5>🛠️ 兜底方案</h5>
+                <ul>
+                  <li>本地适配器</li>
+                  <li>规则匹配引擎</li>
+                  <li>自定义格式化函数</li>
+                  <li>无缝降级体验</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 使用示例 -->
+          <div class="liao-showcase-ai-usage">
+            <h4>快速上手</h4>
+            <div class="liao-showcase-code-example">
+              <h5>基础用法</h5>
+              <pre><code>&lt;LiaoMessageList
+  :messages="originalMessages"
+  :use-ai-adapter="true"
+  :ai-adapter-options="{
+    apiKey: 'your-api-key',
+    model: 'qwen-turbo-2025-04-28',
+    enableCache: true,
+    timeoutMs: 5000
+  }"
+  @adapter-success="handleAdapterSuccess"
+  @adapter-error="handleAdapterError"
+/&gt;</code></pre>
+            </div>
+            
+            <div class="liao-showcase-code-example">
+              <h5>编程式调用</h5>
+              <pre><code>import { adaptMessage } from '@/ai-adapter'
+
+// 适配单条消息
+const result = await adaptMessage(rawMessage, {
+  apiKey: 'your-api-key',
+  model: 'qwen-turbo-2025-04-28'
+})
+
+// 适配多条消息
+const results = await adaptMessages(rawMessages, options)</code></pre>
+            </div>
+            
+            <div class="liao-showcase-code-example">
+              <h5>Vue 组合式函数</h5>
+              <pre><code>import { useAiMessageAdapter } from '@/ai-adapter'
+
+const {
+  adaptMessage,
+  adaptMessages,
+  isLoading,
+  error,
+  stats
+} = useAiMessageAdapter({
+  apiKey: 'your-api-key',
+  enableCache: true
+})</code></pre>
+            </div>
+          </div>
+          
+          <!-- 最佳实践 -->
+          <div class="liao-showcase-ai-best-practices">
+            <h4>最佳实践建议</h4>
+            <div class="liao-showcase-practice-grid">
+              <div class="liao-showcase-practice-item">
+                <div class="liao-showcase-practice-icon">💡</div>
+                <div class="liao-showcase-practice-content">
+                  <h5>启用缓存</h5>
+                  <p>对于重复的消息格式，启用缓存可以显著提升性能并减少 API 调用成本。</p>
+                </div>
+              </div>
+              <div class="liao-showcase-practice-item">
+                <div class="liao-showcase-practice-icon">⚙️</div>
+                <div class="liao-showcase-practice-content">
+                  <h5>配置兜底方案</h5>
+                  <p>设置合适的兜底格式化函数，确保在 AI 服务不可用时仍能正常工作。</p>
+                </div>
+              </div>
+              <div class="liao-showcase-practice-item">
+                <div class="liao-showcase-practice-icon">📊</div>
+                <div class="liao-showcase-practice-content">
+                  <h5>监控使用情况</h5>
+                  <p>通过事件监听和统计信息，监控适配器的使用情况和性能表现。</p>
+                </div>
+              </div>
+              <div class="liao-showcase-practice-item">
+                <div class="liao-showcase-practice-icon">🔐</div>
+                <div class="liao-showcase-practice-content">
+                  <h5>保护 API 密钥</h5>
+                  <p>在生产环境中通过环境变量或安全的配置管理系统来管理 API 密钥。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -522,6 +765,8 @@ import LiaoFileUpload from '../components/LiaoFileUpload/LiaoFileUpload.vue';
 import LiaoFilePreview from '../components/LiaoFilePreview/LiaoFilePreview.vue';
 import LiaoFileChipList from '../components/LiaoFileChipList/LiaoFileChipList.vue';
 import LiaoFileBubble from '../components/LiaoMessageBubble/LiaoFileBubble.vue';
+import LiaoWindowList from '../components/LiaoWindowList/LiaoWindowList.vue';
+import AiMessageAdapterExample from './AiMessageAdapterExample.vue';
 
 // 视图模式：桌面/移动
 const viewMode = ref('desktop');
@@ -542,7 +787,7 @@ const isStreaming = ref(false); // 是否正在流式输出
 const inputLocked = ref(false); // 输入框是否锁定
 const streamingMessageId = ref<string | null>(null); // 当前流式输出的消息ID
 const streamingContent = ref(''); // 流式输出的内容
-const streamingTimer = ref<number | null>(null); // 流式输出定时器
+const streamingTimer = ref<ReturnType<typeof setInterval> | null>(null); // 流式输出定时器
 
 // 创建模拟文件对象的工具函数
 const createMockFile = (fileName: string, content: string, type: string): File => {
@@ -586,7 +831,7 @@ npm install liaokit
 
 ## 使用
 \`\`\`javascript
-import { LiaoWindow } from "liaokit";
+import { LiaoWindow } from "../components/LiaoWindow/LiaoWindow.vue";
 \`\`\`
 
 这个文件可以正常预览文本内容！`;
@@ -1818,7 +2063,9 @@ const componentTabs = [
   { id: 'files', name: '文件上传' },
   { id: 'input', name: '输入区域' },
   { id: 'quickactions', name: '快捷操作栏' },
-  { id: 'icons', name: '图标库' }
+  { id: 'icons', name: '图标库' },
+  { id: 'windows', name: '多窗口管理' },
+  { id: 'ai-adapter', name: 'AI智能适配' }
 ];
 
 const activeComponentTab = ref('bubbles');
@@ -3139,6 +3386,93 @@ const toggleChatMode = () => {
   isStreaming.value = false; // 重置流式输出状态
 };
 
+// 多窗口管理相关
+const windowListRef = ref(null);
+const windowStats = ref({
+  totalWindows: 0,
+  activeWindow: null as string | null,
+  unreadCount: 0,
+  currentLayout: 'free'
+});
+
+const getWindowMessages = (windowId: string) => {
+  return messages.value.slice(0, 3); // 返回前3条消息作为演示
+};
+
+const getWindowInputValue = (windowId: string) => {
+  return ''; // 返回空字符串
+};
+
+const updateWindowInput = (windowId: string, value: string) => {
+  // 暂时不实现具体功能
+};
+
+const handleWindowSend = (windowId: string, content: string) => {
+  const newMessage: Message = {
+    id: `msg-${Date.now()}`,
+    content,
+    isSelf: true,
+    time: new Date(),
+    status: 'sending'
+  };
+  messages.value.push(newMessage);
+  inputValue.value = '';
+};
+
+const createDemoWindow = () => {
+  const newMessage: Message = {
+    id: `msg-${Date.now()}`,
+    content: '创建了新窗口',
+    isSelf: true,
+    time: new Date(),
+    status: 'sent'
+  };
+  messages.value.push(newMessage);
+};
+
+const simulateUnreadMessage = () => {
+  const newMessage: Message = {
+    id: `msg-${Date.now()}`,
+    content: '这是一条未读消息',
+    isSelf: false,
+    time: new Date(),
+    status: 'sent'
+  };
+  messages.value.push(newMessage);
+  windowStats.value.unreadCount++;
+};
+
+const toggleLayoutMode = () => {
+  const layouts = ['free', 'grid', 'cascade', 'tile'];
+  const currentIndex = layouts.indexOf(windowStats.value.currentLayout);
+  const nextIndex = (currentIndex + 1) % layouts.length;
+  windowStats.value.currentLayout = layouts[nextIndex];
+};
+
+const clearAllWindows = () => {
+  windowStats.value.totalWindows = 0;
+  windowStats.value.activeWindow = null;
+  windowStats.value.unreadCount = 0;
+};
+
+const handleWindowCreated = (window: any) => {
+  windowStats.value.totalWindows++;
+  windowStats.value.activeWindow = window.id || null;
+};
+
+const handleWindowClosed = (windowId: string) => {
+  windowStats.value.totalWindows--;
+  windowStats.value.activeWindow = null;
+};
+
+const handleWindowActivated = (windowId: string) => {
+  windowStats.value.activeWindow = windowId;
+};
+
+const handleLayoutChanged = (layout: string) => {
+  windowStats.value.currentLayout = layout;
+};
+
 </script>
 
 <style lang="scss" scoped>
@@ -3981,5 +4315,261 @@ const toggleChatMode = () => {
     background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
     box-shadow: 0 4px 16px rgba(33, 150, 243, 0.4);
   }
+}
+
+.liao-showcase-window-demo {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fff;
+}
+
+.liao-showcase-window-controls {
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.liao-showcase-control-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.liao-showcase-window-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.liao-showcase-preview-link {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.liao-showcase-full-preview-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    text-decoration: none;
+    color: white;
+  }
+  
+  span {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  small {
+    font-size: 12px;
+    opacity: 0.9;
+  }
+}
+
+.liao-showcase-ai-adapter-intro {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  p.liao-showcase-description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 16px;
+  }
+}
+
+.liao-showcase-ai-features {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .liao-showcase-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    @media (max-width: 768px) {
+      align-items: flex-start;
+    }
+    
+    .liao-showcase-feature-icon {
+      font-size: 24px;
+      color: #1890ff;
+    }
+    
+    .liao-showcase-feature-content {
+      h4 {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 4px;
+      }
+      
+      p {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+  }
+}
+
+.liao-showcase-ai-tech-specs {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  h4 {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 16px;
+  }
+  
+  .liao-showcase-tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+  
+  .liao-showcase-tech-item {
+    h5 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    ul {
+      list-style: none;
+      padding-left: 0;
+      
+      li {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+      }
+    }
+  }
+}
+
+.liao-showcase-ai-usage {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  h4 {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 16px;
+  }
+  
+  .liao-showcase-code-example {
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    
+    h5 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-size: 12px;
+    }
+  }
+}
+
+.liao-showcase-ai-best-practices {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  h4 {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 16px;
+  }
+  
+  .liao-showcase-practice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+  
+  .liao-showcase-practice-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .liao-showcase-practice-icon {
+      font-size: 24px;
+      color: #1890ff;
+    }
+    
+    .liao-showcase-practice-content {
+      h5 {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 4px;
+      }
+      
+      p {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+  }
+}
+
+.liao-showcase-ai-demo-container {
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fff;
 }
 </style> 

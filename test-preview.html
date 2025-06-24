@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiaoKit 多窗口预览测试</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      padding: 20px;
+    }
+    
+    .test-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #1e293b;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .status {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #10b981;
+      background: #f0fdf4;
+      color: #059669;
+    }
+    
+    .test-section {
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    
+    .test-button {
+      background: #2669ff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 10px 5px;
+    }
+    
+    .test-button:hover {
+      background: #1e5ae8;
+    }
+    
+    .navigation {
+      text-align: center;
+      margin-top: 30px;
+    }
+    
+    .nav-link {
+      color: #2669ff;
+      text-decoration: none;
+      padding: 10px 20px;
+      border: 2px solid #2669ff;
+      border-radius: 6px;
+      margin: 0 10px;
+      display: inline-block;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      background: #2669ff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>🚀 LiaoKit 多窗口预览系统测试</h1>
+    
+    <div class="status">
+      ✅ 基础HTML页面加载成功！
+    </div>
+    
+    <div class="test-section">
+      <h3>📋 系统检查清单</h3>
+      <p><strong>1. HTML页面</strong>: ✅ 正常加载</p>
+      <p><strong>2. CSS样式</strong>: ✅ 正常渲染</p>
+      <p><strong>3. JavaScript测试</strong>:</p>
+      <button class="test-button" onclick="testJS()">点击测试JavaScript</button>
+      <span id="js-result"></span>
+    </div>
+    
+    <div class="test-section">
+      <h3>🔧 故障排查步骤</h3>
+      <ol>
+        <li><strong>检查开发服务器</strong>: 确保 <code>npm run dev</code> 正在运行</li>
+        <li><strong>检查端口</strong>: 默认端口通常是 3000 或 5173</li>
+        <li><strong>检查控制台</strong>: 按F12查看是否有JavaScript错误</li>
+        <li><strong>检查网络</strong>: 确保所有资源都能正常加载</li>
+        <li><strong>清除缓存</strong>: 按Ctrl+F5强制刷新页面</li>
+      </ol>
+    </div>
+    
+    <div class="test-section">
+      <h3>🎯 访问方式</h3>
+      <p><strong>方法1</strong>: 直接访问 <code>http://localhost:5173/window-preview</code></p>
+      <p><strong>方法2</strong>: 访问主页 <code>http://localhost:5173</code> 然后点击预览链接</p>
+      <p><strong>方法3</strong>: 访问组件展示页面，寻找多窗口预览入口</p>
+    </div>
+    
+    <div class="test-section">
+      <h3>📞 如果仍然白屏</h3>
+      <p>请检查以下常见问题：</p>
+      <ul>
+        <li>Node.js 版本是否兼容 (推荐 16+)</li>
+        <li>依赖是否完整安装 (<code>npm install</code>)</li>
+        <li>是否有TypeScript编译错误</li>
+        <li>Vue组件是否有语法错误</li>
+        <li>路由配置是否正确</li>
+      </ul>
+    </div>
+    
+    <div class="navigation">
+      <a href="/" class="nav-link">🏠 返回主页</a>
+      <a href="/window-preview" class="nav-link">🪟 多窗口预览</a>
+      <button class="test-button" onclick="checkConsole()">📋 检查控制台</button>
+    </div>
+  </div>
+
+  <script>
+    function testJS() {
+      const result = document.getElementById('js-result');
+      result.textContent = ' ✅ JavaScript工作正常！';
+      result.style.color = '#059669';
+      result.style.fontWeight = 'bold';
+      console.log('JavaScript测试成功');
+    }
+    
+    function checkConsole() {
+      console.log('=== LiaoKit 调试信息 ===');
+      console.log('当前URL:', window.location.href);
+      console.log('用户代理:', navigator.userAgent);
+      console.log('屏幕尺寸:', window.innerWidth + 'x' + window.innerHeight);
+      console.log('是否支持ES6:', typeof Symbol !== 'undefined');
+      console.log('Vue版本检查中...');
+      
+      if (window.Vue) {
+        console.log('Vue已加载:', window.Vue.version);
+      } else {
+        console.log('Vue未检测到');
+      }
+      
+      alert('调试信息已输出到控制台，请按F12查看详细信息');
+    }
+    
+    // 页面加载完成时的检查
+    window.addEventListener('load', function() {
+      console.log('测试页面加载完成');
+      console.log('当前时间:', new Date().toLocaleString());
+    });
+  </script>
+</body>
+</html> 
