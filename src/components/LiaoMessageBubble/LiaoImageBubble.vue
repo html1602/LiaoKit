@@ -1,54 +1,78 @@
 <template>
-  <LiaoMessageBubble
-    :type="type"
-    :avatar="avatar"
-    :showAvatar="showAvatar"
-    :showAvatarSelf="showAvatarSelf"
-    :name="name"
-    :showName="showName"
-    :time="time"
-    :showTime="showTime"
-    :timeFormat="timeFormat"
-    :highlight="highlight"
-    :status="status"
-    :customClass="customClassComputed"
+  <div 
+    class="liao-image-container"
+    :class="[
+      `liao-image-container-${type}`,
+      customClass
+    ]"
     @click="handleBubbleClick"
-    @context-menu="handleContextMenu"
+    @contextmenu="handleContextMenu"
   >
-    <div 
-      class="liao-image-content"
-      :class="{ 'liao-image-loading': loading }"
-      @click.stop="handleImageClick"
-    >
-      <!-- 加载占位 -->
-      <div v-if="loading" class="liao-image-loading-indicator">
-        <LiaoIcon name="loading" spin size="medium" />
-        <span>{{ loadingText }}</span>
+    <!-- 头像区域 -->
+    <div v-if="showAvatar && (type === 'other' || showAvatarSelf)" class="liao-image-avatar">
+      <img v-if="avatar" :src="avatar" alt="Avatar" class="liao-image-avatar-img" />
+      <div v-else class="liao-image-avatar-placeholder">
+        <LiaoIcon v-if="type === 'other'" name="robot" size="medium" />
+        <LiaoIcon v-else name="user" size="medium" />
+      </div>
+    </div>
+    
+    <div class="liao-image-wrapper">
+      <!-- 名称显示 -->
+      <div v-if="showName && name" class="liao-image-name">
+        {{ name }}
       </div>
       
-      <!-- 失败占位 -->
-      <div v-else-if="error" class="liao-image-error">
-        <LiaoIcon name="error" size="medium" />
-        <span>{{ errorText }}</span>
-      </div>
-      
-      <!-- 图片 -->
-      <template v-else>
-        <img
-          ref="imageRef"
-          class="liao-image"
-          :src="imageUrl"
-          :alt="alt"
-          :style="imageStyle"
-          @load="handleImageLoad"
-          @error="handleImageError"
-        />
-        
-        <!-- 图片尺寸信息 -->
-        <div v-if="showInfo && imageInfo.width && imageInfo.height" class="liao-image-info">
-          {{ `${imageInfo.width} × ${imageInfo.height}` }}
+      <!-- 图片内容区域 -->
+      <div 
+        class="liao-image-content"
+        :class="{ 'liao-image-loading': loading }"
+        @click.stop="handleImageClick"
+      >
+        <!-- 加载占位 -->
+        <div v-if="loading" class="liao-image-loading-indicator">
+          <LiaoIcon name="loading" spin size="medium" />
+          <span>{{ loadingText }}</span>
         </div>
-      </template>
+        
+        <!-- 失败占位 -->
+        <div v-else-if="error" class="liao-image-error">
+          <LiaoIcon name="error" size="medium" />
+          <span>{{ errorText }}</span>
+        </div>
+        
+        <!-- 图片 -->
+        <template v-else>
+          <img
+            ref="imageRef"
+            class="liao-image"
+            :src="imageUrl"
+            :alt="alt"
+            :style="imageStyle"
+            @load="handleImageLoad"
+            @error="handleImageError"
+          />
+          
+          <!-- 图片尺寸信息 -->
+          <div v-if="showInfo && imageInfo.width && imageInfo.height" class="liao-image-info">
+            {{ `${imageInfo.width} × ${imageInfo.height}` }}
+          </div>
+        </template>
+      </div>
+      
+      <!-- 时间显示 -->
+      <div v-if="showTime" class="liao-image-time">
+        {{ formattedTime }}
+      </div>
+      
+      <!-- 消息状态 -->
+      <div v-if="status === 'sending'" class="liao-image-status">
+        <LiaoIcon name="loading" size="small" class="loading-icon" />
+      </div>
+      <div v-else-if="status === 'failed'" class="liao-image-status error">
+        <LiaoIcon name="error" size="small" />
+        <span>发送失败</span>
+      </div>
     </div>
     
     <!-- 预览遮罩 -->
@@ -65,13 +89,12 @@
         </button>
       </div>
     </div>
-  </LiaoMessageBubble>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, nextTick } from 'vue';
 import type { PropType } from 'vue';
-import LiaoMessageBubble from './LiaoMessageBubble.vue';
 import LiaoIcon from '../LiaoIcon/LiaoIcon.vue';
 
 // 图片信息接口
@@ -229,6 +252,42 @@ const imageStyle = computed(() => {
   };
 });
 
+// 时间格式化
+const formattedTime = computed(() => {
+  if (!props.time) return '';
+  
+  let date: Date;
+  
+  if (props.time instanceof Date) {
+    date = props.time;
+  } else if (typeof props.time === 'number') {
+    date = new Date(props.time);
+  } else {
+    date = new Date(props.time);
+  }
+  
+  if (isNaN(date.getTime())) {
+    return '';
+  }
+  
+  // 简易时间格式化
+  const now = new Date();
+  const isToday = date.getDate() === now.getDate() && 
+                  date.getMonth() === now.getMonth() && 
+                  date.getFullYear() === now.getFullYear();
+  
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  
+  if (isToday) {
+    return `${hours}:${minutes}`;
+  } else {
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${month}-${day} ${hours}:${minutes}`;
+  }
+});
+
 // 图片加载成功
 const handleImageLoad = () => {
   if (imageRef.value) {
@@ -293,79 +352,180 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.liao-image-container {
+  display: flex;
+  margin: $spacing-md 0;
+  position: relative;
+  
+  &.liao-image-container-self {
+    flex-direction: row-reverse;
+    
+    .liao-image-wrapper {
+      align-items: flex-end;
+      margin-right: $spacing-md;
+    }
+    
+    .liao-image-name {
+      text-align: right;
+    }
+    
+    .liao-image-time {
+      text-align: right;
+    }
+  }
+  
+  &.liao-image-container-other {
+    flex-direction: row;
+    
+    .liao-image-wrapper {
+      align-items: flex-start;
+      margin-left: $spacing-md;
+    }
+  }
+  
+  &.liao-image-container-system {
+    justify-content: center;
+    
+    .liao-image-wrapper {
+      align-items: center;
+    }
+    
+    .liao-image-name,
+    .liao-image-time {
+      text-align: center;
+    }
+  }
+}
 
-.liao-image-bubble {
-  .liao-image-content {
-    position: relative;
-    overflow: hidden;
-    border-radius: $border-radius-md;
-    background-color: $bg-secondary;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 100px;
-    min-height: 100px;
-    cursor: pointer;
-    transition: all $transition-duration $transition-timing-function;
-    
-    &:hover {
-      filter: brightness(0.95);
-    }
-    
-    &:active {
-      transform: scale(0.98);
-    }
-  }
+.liao-image-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
   
-  .liao-image {
-    display: block;
+  .liao-image-avatar-img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: $border-radius-md;
   }
   
-  .liao-image-info {
-    position: absolute;
-    bottom: $spacing-xs;
-    right: $spacing-xs;
-    padding: $spacing-xs $spacing-sm;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    font-size: $font-size-xs;
-    border-radius: $border-radius-sm;
-    pointer-events: none;
-  }
-  
-  .liao-image-loading-indicator,
-  .liao-image-error {
+  .liao-image-avatar-placeholder {
+    width: 100%;
+    height: 100%;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: $spacing-md;
+    background-color: $bg-secondary;
     color: $text-secondary;
-    
-    span {
-      margin-top: $spacing-sm;
-      font-size: $font-size-sm;
-    }
   }
+}
+
+.liao-image-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.liao-image-name {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.liao-image-time {
+  font-size: $font-size-xs;
+  color: $text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.liao-image-status {
+  display: flex;
+  align-items: center;
+  font-size: $font-size-xs;
+  color: $text-tertiary;
+  margin-top: $spacing-xs;
   
-  .liao-image-loading {
-    pointer-events: none;
-    opacity: 0.8;
-  }
-  
-  .liao-image-error {
+  &.error {
     color: $danger-color;
-    cursor: default;
-    
-    &:hover {
-      filter: none;
-    }
-    
-    &:active {
-      transform: none;
-    }
+  }
+  
+  .loading-icon {
+    animation: spin 1s linear infinite;
+  }
+  
+  span {
+    margin-left: $spacing-xs;
+  }
+}
+
+.liao-image-content {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  min-height: 100px;
+  cursor: pointer;
+  transition: all $transition-duration $transition-timing-function;
+  
+  &:hover {
+    filter: brightness(0.95);
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.liao-image {
+  display: block;
+  object-fit: cover;
+}
+
+.liao-image-info {
+  position: absolute;
+  bottom: $spacing-xs;
+  right: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: $font-size-xs;
+  border-radius: $border-radius-sm;
+  pointer-events: none;
+}
+
+.liao-image-loading-indicator,
+.liao-image-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
+  color: $text-secondary;
+  
+  span {
+    margin-top: $spacing-sm;
+    font-size: $font-size-sm;
+  }
+}
+
+.liao-image-loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.liao-image-error {
+  color: $danger-color;
+  cursor: default;
+  
+  &:hover {
+    filter: none;
+  }
+  
+  &:active {
+    transform: none;
   }
 }
 
@@ -407,7 +567,7 @@ onMounted(() => {
   right: 0;
   width: 36px;
   height: 36px;
-  border-radius: $border-radius-circle;
+  border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.5);
   color: white;
   display: flex;
@@ -438,4 +598,9 @@ onMounted(() => {
     transform: scale(1);
   }
 }
-</style> 
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>

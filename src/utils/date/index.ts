@@ -1,3 +1,5 @@
+import { logger } from '../logger';
+
 /**
  * 日期格式化工具函数
  */
@@ -20,7 +22,7 @@ export function formatDate(date: Date | number | string, format: string = 'YYYY-
   
   // 检查日期是否有效
   if (isNaN(dateObj.getTime())) {
-    console.warn('Invalid date:', date);
+    logger.warn('Invalid date:', date);
     return '';
   }
   

@@ -2,6 +2,8 @@
  * 图标工具函数
  */
 
+import { logger } from './logger';
+
 // 自定义SVG图标缓存
 const svgIconCache: Record<string, string> = {};
 
@@ -12,7 +14,7 @@ const svgIconCache: Record<string, string> = {};
  */
 export function registerSvgIcon(name: string, svg: string): void {
   if (svgIconCache[name]) {
-    console.warn(`LiaoIcon: 图标 ${name} 已存在，将被覆盖`);
+    logger.warn(`LiaoIcon: 图标 ${name} 已存在，将被覆盖`);
   }
   svgIconCache[name] = svg;
 }

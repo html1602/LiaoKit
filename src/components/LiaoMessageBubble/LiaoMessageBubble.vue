@@ -33,7 +33,7 @@
         }"
       >
         <slot>
-          <div v-if="enableMarkdown && isMarkdown" v-html="renderedMarkdown"></div>
+          <div v-if="enableMarkdown && isMarkdown" class="liao-markdown-content" v-html="renderedMarkdown"></div>
           <div v-else>{{ content }}</div>
         </slot>
       </div>
@@ -42,7 +42,7 @@
       </div>
       <div v-else-if="status === 'streaming'" class="liao-message-bubble-status">
         <LiaoIcon name="loading" size="small" class="loading-icon" />
-        <span>正在输出...</span>
+        <span>正在思考...</span>
       </div>
       <div v-else-if="status === 'failed'" class="liao-message-bubble-status error">
         <LiaoIcon name="error" size="small" />
@@ -60,6 +60,10 @@ import { computed, ref } from 'vue';
 import type { PropType } from 'vue';
 import LiaoIcon from '../LiaoIcon/LiaoIcon.vue';
 import { marked } from 'marked';
+import { createComponentLogger } from '../../utils/logger';
+
+// 创建组件专用日志器
+const logger = createComponentLogger('MessageBubble');
 
 // 设置marked选项
 marked.setOptions({
@@ -153,7 +157,7 @@ const renderedMarkdown = computed(() => {
   try {
     return marked(props.content);
   } catch (e) {
-    console.error('Markdown渲染错误:', e);
+    logger.error('Markdown渲染错误:', e);
     return props.content;
   }
 });
@@ -289,7 +293,91 @@ const handleContextMenu = (event: MouseEvent) => {
       }
     }
     
-    // Markdown样式覆盖
+    // Markdown内容样式优化
+    :deep(.liao-markdown-content) {
+      // 关键修复：覆盖父级的 white-space 设置，恢复正常的空白处理
+      white-space: normal;
+      
+      // 在气泡内的特殊调整 - 更紧凑的间距
+      h1, h2, h3, h4, h5, h6 {
+        margin: 8px 0 4px 0;  // 从16px 0 12px 0减少到8px 0 4px 0
+        
+        &:first-child {
+          margin-top: 0;
+        }
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+      
+      h1 { 
+        font-size: 18px;  // 从20px减少到18px
+        padding-bottom: 4px;  // 从8px减少到4px
+        margin-bottom: 6px;  // 从12px减少到6px
+      }
+      h2 { 
+        font-size: 16px;  // 从18px减少到16px
+        padding-bottom: 3px;  // 从6px减少到3px
+        margin-bottom: 5px;  // 从10px减少到5px
+      }
+      h3 { 
+        font-size: 15px;  // 从16px减少到15px
+        margin: 6px 0 3px 0;  // 减少间距
+      }
+      h4 { 
+        font-size: 14px;  // 从15px减少到14px
+        margin: 5px 0 2px 0;  // 减少间距
+      }
+      h5 { 
+        font-size: 14px;  
+        margin: 8px 0 4px 0;  
+      }
+      h6 { 
+        font-size: 13px;  
+        margin: 8px 0 4px 0; 
+      }
+      
+      p {
+        margin: 8px 0;  
+        line-height: 1.5; 
+      }
+      
+      ul, ol {
+        margin: 8px 0; 
+        padding-left: 20px; 
+        
+        li {
+          margin: 2px 0;  
+          line-height: 1.5;  
+        }
+      }
+      
+      // 移动端进一步优化
+      @media (max-width: 768px) {
+        h1 { font-size: 16px; margin: 6px 0 3px 0; }
+        h2 { font-size: 15px; margin: 5px 0 2px 0; }
+        h3 { font-size: 14px; margin: 4px 0 2px 0; }
+        h4, h5, h6 { font-size: 13px; margin: 3px 0 1px 0; }
+        
+        p {
+          margin: 3px 0;
+          line-height: 1.5;
+        }
+        
+        ul, ol {
+          margin: 3px 0;
+          padding-left: 12px;
+          
+          li {
+            margin: 0.5px 0;
+            line-height: 1.5;
+          }
+        }
+      }
+    }
+    
+    // 保持原有的其他样式
     :deep(a) {
       color: $primary-color;
       text-decoration: none;
@@ -374,7 +462,7 @@ const handleContextMenu = (event: MouseEvent) => {
       word-break: break-word;
       word-wrap: break-word;
       overflow-wrap: break-word;
-      white-space: pre-wrap;
+      white-space: normal;
       hyphens: auto;
       line-break: anywhere;
       

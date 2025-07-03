@@ -4,6 +4,7 @@
  */
 
 import type { Ref } from 'vue';
+import { logger } from './logger';
 
 // 扩展消息状态类型，添加streaming状态
 export type StreamingMessageStatus = 'sending' | 'sent' | 'failed' | 'streaming';
@@ -118,7 +119,7 @@ export class StreamingMessageManager implements StreamingAPI {
         status: 'streaming'
       };
     } else {
-      console.warn(`消息 ${messageId} 未找到，无法追加内容`);
+      logger.warn(`消息 ${messageId} 未找到，无法追加内容`);
     }
   }
   
@@ -133,7 +134,7 @@ export class StreamingMessageManager implements StreamingAPI {
         status: 'sent'
       };
     } else {
-      console.warn(`消息 ${messageId} 未找到，无法完成流式输出`);
+      logger.warn(`消息 ${messageId} 未找到，无法完成流式输出`);
     }
   }
   
@@ -149,7 +150,7 @@ export class StreamingMessageManager implements StreamingAPI {
         content: this.messages.value[index].content + `\n\n❌ 错误: ${error}`
       };
     } else {
-      console.warn(`消息 ${messageId} 未找到，无法设置错误`);
+      logger.warn(`消息 ${messageId} 未找到，无法设置错误`);
     }
   }
   
@@ -165,7 +166,7 @@ export class StreamingMessageManager implements StreamingAPI {
         status: 'streaming'
       };
     } else {
-      console.warn(`消息 ${messageId} 未找到，无法清空内容`);
+      logger.warn(`消息 ${messageId} 未找到，无法清空内容`);
     }
   }
   

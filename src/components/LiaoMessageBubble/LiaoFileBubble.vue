@@ -505,15 +505,39 @@ const readFileContent = async (file: File): Promise<string> => {
 // 读取URL内容（用于Base64数据或外部文件）
 const readUrlContent = async (url: string): Promise<string> => {
   try {
-    // 如果是Base64 data URL，直接解码
-    if (url.startsWith('data:text/') || url.startsWith('data:application/json')) {
-      const base64Data = url.split(',')[1];
-      if (base64Data) {
-        return atob(base64Data);
+    // 如果是 data URL，进行解码处理
+    if (url.startsWith('data:')) {
+      console.log('🔍 处理Data URL:', url.substring(0, 100) + '...');
+      
+      // 检查是否为base64编码
+      if (url.includes(';base64,')) {
+        const base64Data = url.split(',')[1];
+        if (base64Data) {
+          console.log('📋 解码Base64数据');
+          const decodedData = atob(base64Data);
+          // 尝试将二进制数据转换为UTF-8字符串
+          try {
+            return decodeURIComponent(escape(decodedData));
+          } catch {
+            // 如果UTF-8解码失败，直接返回解码后的字符串
+            return decodedData;
+          }
+        }
+      } else {
+        // 处理普通的data URL (例如: data:text/plain;charset=utf-8,content)
+        const commaIndex = url.indexOf(',');
+        if (commaIndex !== -1) {
+          console.log('📄 解码普通Data URL');
+          const content = url.substring(commaIndex + 1);
+          return decodeURIComponent(content);
+        }
       }
+      
+      throw new Error('无效的Data URL格式');
     }
     
     // 对于其他URL，尝试fetch
+    console.log('🌐 通过fetch获取内容:', url);
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);

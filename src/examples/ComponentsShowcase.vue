@@ -194,15 +194,27 @@
           <h3>图片气泡</h3>
           <div class="liao-showcase-component-row">
             <LiaoImageBubble
-              image-url="https://picsum.photos/500/300"
-              alt="示例图片"
+              imageUrl="/vite.svg"
+              alt="Vite Logo"
               type="other"
-              :show-avatar="true"
+              :showAvatar="true"
               avatar="https://randomuser.me/api/portraits/men/32.jpg"
               name="AI助手"
-              :show-name="true"
+              :showName="true"
               :time="new Date()"
-              :show-time="true"
+              :showTime="true"
+            />
+          </div>
+          <div class="liao-showcase-component-row">
+            <LiaoImageBubble
+              imageUrl="/vite.svg"
+              alt="Vite Logo"
+              type="self"
+              :showAvatar="true"
+              name="我"
+              :showName="true"
+              :time="new Date()"
+              :showTime="true"
             />
           </div>
         </div>
@@ -767,6 +779,9 @@ import LiaoFileChipList from '../components/LiaoFileChipList/LiaoFileChipList.vu
 import LiaoFileBubble from '../components/LiaoMessageBubble/LiaoFileBubble.vue';
 import LiaoWindowList from '../components/LiaoWindowList/LiaoWindowList.vue';
 import AiMessageAdapterExample from './AiMessageAdapterExample.vue';
+
+// 导入调试组件
+import FilePreviewDebugger from './FilePreviewDebugger.vue';
 
 // 视图模式：桌面/移动
 const viewMode = ref('desktop');
@@ -3472,6 +3487,8 @@ const handleWindowActivated = (windowId: string) => {
 const handleLayoutChanged = (layout: string) => {
   windowStats.value.currentLayout = layout;
 };
+
+const activeTab = ref('debugger'); // 默认显示调试器
 
 </script>
 

@@ -93,10 +93,7 @@
               <LiaoQuickActionBar
                 v-if="message.quickActions && message.quickActions.length > 0"
                 :actions="message.quickActions"
-                @action-click="(action) => {
-                  console.log('快捷操作被点击:', action);
-                  $emit('quick-action-click', action);
-                }"
+                @action-click="handleQuickAction"
                 class="liao-message-quick-actions"
               />
               
@@ -219,6 +216,10 @@ import LiaoFileBubble from '../LiaoMessageBubble/LiaoFileBubble.vue';
 import { formatDate } from '../../utils/date/index.ts';
 import { useAiMessageAdapter } from '../../ai-adapter';
 import type { AiAdapterOptions, CustomFormatFunction } from '../../ai-adapter';
+import { createComponentLogger } from '../../utils/logger';
+
+// 创建组件专用日志器
+const logger = createComponentLogger('MessageList');
 
 // 消息类型定义
 export interface Message {
@@ -338,6 +339,11 @@ const props = defineProps({
   adapterTimeout: {
     type: Number,
     default: 5000
+  },
+  // 🔥 新增：跳过用户消息适配的配置
+  skipUserMessageAdapter: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -399,10 +405,16 @@ const {
   } : { enabled: false }
 );
 
-// 处理消息适配
-const processMessages = async (rawMessages: Message[]) => {
+// 快捷操作处理
+const handleQuickAction = (action: any) => {
+  logger.debug('快捷操作被点击:', action);
+  emit('quick-action-click', action);
+};
+
+// AI 消息适配处理
+const processAiMessages = async () => {
   if (!props.useAiAdapter) {
-    adaptedMessages.value = rawMessages;
+    adaptedMessages.value = props.messages;
     return;
   }
 
@@ -410,48 +422,214 @@ const processMessages = async (rawMessages: Message[]) => {
   adapterError.value = null;
 
   try {
-    console.log('🤖 开始 AI 消息适配，消息数量:', rawMessages.length);
+    logger.info('🤖 开始 AI 消息适配，消息数量:', props.messages.length);
     
-    const results = await adaptMessagesAsync(rawMessages, props.customFormat);
+    // 🔥 核心：组件级别的用户消息过滤
+    let messagesToProcess = props.messages;
+    let userMessages: Message[] = [];
+    let streamingMessages: Message[] = [];
     
-    adaptedMessages.value = results
+    if (props.skipUserMessageAdapter) {
+      // 分离用户消息和AI消息
+      const { userMsgs, aiMsgs } = separateMessages(props.messages);
+      userMessages = userMsgs;
+      messagesToProcess = aiMsgs;
+      
+      logger.debug(`📝 跳过 ${userMsgs.length} 条用户消息的AI适配，处理 ${aiMsgs.length} 条AI消息`);
+    }
+    
+    // 🆕 流式消息处理：分离流式中的消息和已完成的消息
+    const { streamingMsgs, completedMsgs } = separateStreamingMessages(messagesToProcess);
+    streamingMessages = streamingMsgs;
+    messagesToProcess = completedMsgs;
+    
+    if (streamingMessages.length > 0) {
+      logger.debug(`🔄 跳过 ${streamingMessages.length} 条正在流式输出的消息，等待流式完成后再适配`);
+    }
+    
+    // 只对需要适配的消息调用AI适配器
+    const results = messagesToProcess.length > 0 
+      ? await adaptMessagesAsync(messagesToProcess, props.customFormat)
+      : [];
+    
+    const adaptedAiMessages = results
       .filter(result => result.success && result.message)
       .map(result => result.message!);
+
+    // 合并用户消息、流式消息和适配后的AI消息，保持原始顺序
+    adaptedMessages.value = mergeAllMessagesInOrder(
+      props.messages, 
+      userMessages, 
+      streamingMessages, 
+      adaptedAiMessages
+    );
 
     // 处理失败的消息
     const failedCount = results.filter(result => !result.success).length;
     if (failedCount > 0) {
-      console.warn(`⚠️ ${failedCount} 条消息适配失败，使用兜底方案`);
-      emit('adapter-fallback', { failedCount, total: rawMessages.length });
+      logger.warn(`⚠️ ${failedCount} 条消息适配失败，使用兜底方案`);
+      emit('adapter-fallback', { failedCount, total: props.messages.length });
     }
 
     // 发射成功事件
     emit('adapter-success', {
       processed: results.length,
       cached: results.filter(r => r.fromCache).length,
+      skipped: userMessages.length + streamingMessages.length,
+      streaming: streamingMessages.length,
       stats: aiAdapterStats
     });
 
-    console.log('✅ AI 消息适配完成');
+    logger.info('✅ AI 消息适配完成');
     
   } catch (error) {
-    console.error('❌ AI 消息适配出错:', error);
+    logger.error('❌ AI 消息适配出错:', error);
     adapterError.value = error instanceof Error ? error.message : '适配失败';
     
     // 适配失败时使用原始消息
-    adaptedMessages.value = rawMessages;
+    adaptedMessages.value = props.messages;
     
-    emit('adapter-error', { error: adapterError.value, originalMessages: rawMessages });
+    emit('adapter-error', { error: adapterError.value, originalMessages: props.messages });
   } finally {
     adapterProcessing.value = false;
   }
+};
+
+// 🔥 新增：分离用户消息和AI消息的函数
+const separateMessages = (messages: Message[]) => {
+  const userMsgs: Message[] = [];
+  const aiMsgs: Message[] = [];
+  
+  messages.forEach(message => {
+    const isUserMessage = 
+      message.isSelf === true ||
+      message.role === 'user' ||
+      (message as any).from === 'user' ||
+      (message as any).sender === 'user' ||
+      (message as any).type === 'user';
+    
+    if (isUserMessage) {
+      userMsgs.push(message);
+    } else {
+      aiMsgs.push(message);
+    }
+  });
+  
+  return { userMsgs, aiMsgs };
+};
+
+// 🆕 新增：分离流式消息和已完成消息的函数
+const separateStreamingMessages = (messages: Message[]) => {
+  const streamingMsgs: Message[] = [];
+  const completedMsgs: Message[] = [];
+  
+  messages.forEach(message => {
+    // 检查消息是否正在流式输出
+    const isStreaming = message.status === 'streaming';
+    
+    if (isStreaming) {
+      streamingMsgs.push(message);
+    } else {
+      completedMsgs.push(message);
+    }
+  });
+  
+  return { streamingMsgs, completedMsgs };
+};
+
+// 🔥 新增：按原始顺序合并消息的函数
+const mergeMessagesInOrder = (originalMessages: Message[], userMessages: Message[], adaptedAiMessages: Message[]) => {
+  const result: Message[] = [];
+  let userIndex = 0;
+  let aiIndex = 0;
+  
+  originalMessages.forEach(originalMessage => {
+    const isUserMessage = 
+      originalMessage.isSelf === true ||
+      originalMessage.role === 'user' ||
+      (originalMessage as any).from === 'user' ||
+      (originalMessage as any).sender === 'user' ||
+      (originalMessage as any).type === 'user';
+    
+    if (isUserMessage) {
+      // 使用原始用户消息
+      if (userIndex < userMessages.length) {
+        result.push(userMessages[userIndex]);
+        userIndex++;
+      } else {
+        result.push(originalMessage); // 兜底
+      }
+    } else {
+      // 使用适配后的AI消息
+      if (aiIndex < adaptedAiMessages.length) {
+        result.push(adaptedAiMessages[aiIndex]);
+        aiIndex++;
+      } else {
+        result.push(originalMessage); // 兜底
+      }
+    }
+  });
+  
+  return result;
+};
+
+// 🆕 新增：合并所有类型消息的函数（用户消息、流式消息、适配后的AI消息）
+const mergeAllMessagesInOrder = (
+  originalMessages: Message[], 
+  userMessages: Message[], 
+  streamingMessages: Message[], 
+  adaptedAiMessages: Message[]
+) => {
+  const result: Message[] = [];
+  let userIndex = 0;
+  let streamingIndex = 0;
+  let aiIndex = 0;
+  
+  originalMessages.forEach(originalMessage => {
+    const isUserMessage = 
+      originalMessage.isSelf === true ||
+      originalMessage.role === 'user' ||
+      (originalMessage as any).from === 'user' ||
+      (originalMessage as any).sender === 'user' ||
+      (originalMessage as any).type === 'user';
+    
+    const isStreamingMessage = originalMessage.status === 'streaming';
+    
+    if (isUserMessage) {
+      // 使用原始用户消息
+      if (userIndex < userMessages.length) {
+        result.push(userMessages[userIndex]);
+        userIndex++;
+      } else {
+        result.push(originalMessage); // 兜底
+      }
+    } else if (isStreamingMessage) {
+      // 使用原始流式消息（保持流式状态）
+      if (streamingIndex < streamingMessages.length) {
+        result.push(streamingMessages[streamingIndex]);
+        streamingIndex++;
+      } else {
+        result.push(originalMessage); // 兜底
+      }
+    } else {
+      // 使用适配后的AI消息
+      if (aiIndex < adaptedAiMessages.length) {
+        result.push(adaptedAiMessages[aiIndex]);
+        aiIndex++;
+      } else {
+        result.push(originalMessage); // 兜底
+      }
+    }
+  });
+  
+  return result;
 };
 
 // 监听消息变化，触发适配
 watch(
   () => props.messages,
   async (newMessages) => {
-    await processMessages(newMessages);
+    await processAiMessages();
   },
   { immediate: true, deep: true }
 );
@@ -468,7 +646,7 @@ watch(
         ...props.aiAdapterOptions
       });
       // 重新处理消息
-      processMessages(props.messages);
+      processAiMessages();
     } else {
       // 禁用适配时直接使用原始消息
       adaptedMessages.value = props.messages;
@@ -632,9 +810,9 @@ const handleScroll = (e: Event) => {
 };
 
 // 滚动到第一条新消息
-const scrollToFirstNewMessage = () => {
-  if (newMessagesStartIndex.value >= 0 && messageListRef.value) {
-    try {
+const scrollToFirstNewMessage = async () => {
+  try {
+    if (newMessagesStartIndex.value >= 0 && messageListRef.value) {
       // 找到所有消息元素
       const messageItems = messageListRef.value.querySelectorAll('.liao-message-list-item');
       
@@ -665,26 +843,27 @@ const scrollToFirstNewMessage = () => {
           }, 1500);
         }
       }
-    } catch (error) {
-      console.error('滚动到新消息失败:', error);
     }
-    
-    // 无论是否成功滚动，都重置提示状态
-    setTimeout(() => {
-      newMessageCount.value = 0;
-      showNewMessageTip.value = false;
-      newMessagesStartIndex.value = -1;
-    }, 500);
-  } else {
-    // 如果找不到新消息，直接滚动到底部
-    scrollToBottomFn(true);
+  } catch (error) {
+    logger.error('滚动到新消息失败:', error);
   }
+  
+  // 无论是否成功滚动，都重置提示状态
+  setTimeout(() => {
+    newMessageCount.value = 0;
+    showNewMessageTip.value = false;
+    newMessagesStartIndex.value = -1;
+  }, 500);
 };
 
 // 监听消息变化 - 使用适配后的消息
 watch(
   () => adaptedMessages.value.length, // 监听适配后的消息数组长度变化
   (newLength, oldLength) => {
+    // 新增：如果正在加载历史消息（由父组件传入的 loadingMore 为 true），则直接返回，避免误触发新消息提示。
+    if (props.loadingMore) {
+      return;
+    }
     // console.log('适配后消息数组长度变化:', { newLength, oldLength });
     
     // 仅在有新增消息时处理
@@ -820,7 +999,7 @@ defineExpose({
   aiAdapterStats: readonly(aiAdapterStats),
   
   // AI 适配器控制方法
-  processMessages,
+  processAiMessages,
   updateAdapterOptions: updateOptions,
   clearAdapterCache: clearCache,
   
@@ -834,24 +1013,21 @@ watch(
   (newMessages) => {
     // 等待下一次更新后设置文件对象
     nextTick(() => {
-      console.log('🔍 [文件对象设置] 开始处理适配后消息列表:', newMessages.length);
+      logger.debug('🔍 [文件对象设置] 开始处理适配后消息列表:', newMessages.length);
       
       // 找到所有文件类型的消息
       const fileMessages = newMessages.filter(message => message.type === 'file');
-      console.log('📁 [文件对象设置] 找到文件消息:', fileMessages.length);
+      logger.debug('📁 [文件对象设置] 找到文件消息:', fileMessages.length);
       
       // 获取所有文件气泡组件引用
       const bubbleRefs = fileBubbleRefs.value;
-      console.log('🎯 [文件对象设置] 气泡引用数量:', bubbleRefs.length);
+      logger.debug('🎯 [文件对象设置] 气泡引用数量:', bubbleRefs.length);
       
       fileMessages.forEach((message, fileIndex) => {
-        // 寻找这个消息在整个消息列表中的索引
-        const messageIndex = newMessages.findIndex(m => m.id === message.id);
-        
-        console.log(`📄 [文件对象设置] 处理文件 ${fileIndex + 1}:`, {
+        logger.debug(`📄 [文件对象设置] 处理文件 ${fileIndex + 1}:`, {
           消息ID: message.id,
           文件名: message.fileName,
-          消息索引: messageIndex,
+          消息索引: newMessages.findIndex(m => m.id === message.id),
           有文件对象: !!message.file,
           有气泡引用: !!bubbleRefs[fileIndex]
         });
@@ -859,12 +1035,12 @@ watch(
         if (message.file && bubbleRefs[fileIndex]) {
           try {
             bubbleRefs[fileIndex].setFileObject(message.file);
-            console.log(`✅ [文件对象设置] 成功设置文件对象: ${message.fileName}`);
+            logger.debug(`✅ [文件对象设置] 成功设置文件对象: ${message.fileName}`);
           } catch (error) {
-            console.error(`❌ [文件对象设置] 设置失败: ${message.fileName}`, error);
+            logger.error(`❌ [文件对象设置] 设置失败: ${message.fileName}`, error);
           }
         } else {
-          console.warn(`⚠️ [文件对象设置] 跳过设置:`, {
+          logger.warn(`⚠️ [文件对象设置] 跳过设置:`, {
             文件名: message.fileName,
             原因: !message.file ? '无文件对象' : '无气泡引用'
           });

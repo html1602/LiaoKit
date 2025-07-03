@@ -74,13 +74,22 @@ export default defineConfig(({ mode }) => {
           exports: 'named',
           // 导出CSS文件
           assetFileNames: (assetInfo) => {
-            if (assetInfo.name === 'style.css') return 'style.css';
+            if (assetInfo.name === 'style.css') return 'liaokit.css';
             return assetInfo.name || 'asset';
           }
         }
       },
       cssCodeSplit: false, // 将所有CSS打包成一个文件
       sourcemap: true, // 生成sourcemap
+      // 生成类型定义文件
+      emptyOutDir: true,
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true, // 生产环境删除console调用
+          drop_debugger: true, // 删除debugger语句
+        },
+      },
     } : {
       // 开发模式构建配置
       outDir: 'dist',

@@ -4,6 +4,7 @@
  */
 
 import type { StreamingAPI } from './streaming';
+import { logger } from './logger';
 
 // SSE事件类型
 export interface SSEEvent {
@@ -221,10 +222,10 @@ export class SSEStreamingManager {
           break;
           
         default:
-          console.warn('未知的SSE消息类型:', data.type);
+          logger.warn('未知的SSE消息类型:', data.type);
       }
     } catch (error) {
-      console.error('解析SSE消息失败:', error);
+      logger.error('解析SSE消息失败:', error);
       // 如果解析失败，直接作为文本内容追加
       this.streamingAPI.appendToMessage(messageId, event.data);
     }
@@ -256,7 +257,7 @@ export class SSEStreamingManager {
       if (!this.isManualClose) {
         // 这里需要保存endpoint和messageId以便重连
         // 实际实现中可能需要重构以支持重连
-        console.log(`正在重连... (${this.retryCount}/${this.options.maxRetries})`);
+        logger.debug(`正在重连... (${this.retryCount}/${this.options.maxRetries})`);
       }
     }, this.options.retryDelay * this.retryCount);
   }
@@ -310,7 +311,7 @@ export class SSEStreamingManager {
           // 页面显示时恢复连接
           if (this.currentState === 'disconnected' && !this.isManualClose) {
             // 这里需要重连逻辑
-            console.log('页面显示，尝试恢复SSE连接');
+            logger.debug('页面显示，尝试恢复SSE连接');
           }
         }
       });

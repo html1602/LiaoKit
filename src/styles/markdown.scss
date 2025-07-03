@@ -1,0 +1,500 @@
+/**
+ * Markdown 样式增强 - 专为AI消息回复设计
+ * 提供美观、层次分明的Markdown渲染效果
+ * 优化版本：更紧凑的行间距，符合标准Markdown渲染
+ */
+
+.liao-markdown-content {
+  // 基础文本样式
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  word-wrap: break-word;
+
+  // 重置默认边距
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  // 标题样式 - 层次分明，紧凑间距
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.25;
+    color: #1a1a1a;
+    margin: 16px 0 8px 0;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  h1 { 
+    font-size: 24px;
+    border-bottom: 2px solid #e1e4e8;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  h2 { 
+    font-size: 20px;
+    border-bottom: 1px solid #e1e4e8;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  h3 { 
+    font-size: 18px;
+    color: #24292e;
+    margin: 12px 0 6px 0;
+  }
+  h4 { 
+    font-size: 16px;
+    color: #24292e;
+    margin: 10px 0 5px 0;
+  }
+  h5 { 
+    font-size: 14px;
+    color: #6a737d;
+    font-weight: 700;
+    margin: 8px 0 4px 0;
+  }
+  h6 { 
+    font-size: 13px;
+    color: #6a737d;
+    font-weight: 700;
+    margin: 8px 0 4px 0;
+  }
+
+  // 段落样式 - 标准间距
+  p {
+    margin: 8px 0;
+    line-height: 1.5;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // 列表样式 - 紧凑的层级结构
+  ul, ol {
+    margin: 8px 0;
+    padding-left: 24px;
+    
+    li {
+      margin: 2px 0;
+      line-height: 1.4;
+      
+      // 嵌套列表
+      ul, ol {
+        margin: 4px 0;
+        padding-left: 20px;
+      }
+    }
+    
+    &:first-child {
+      margin-top: 0;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul li {
+    list-style-type: disc;
+    
+    ul li {
+      list-style-type: circle;
+      
+      ul li {
+        list-style-type: square;
+      }
+    }
+  }
+
+  // 代码样式 - 突出且易读
+  code {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+    font-size: 12px;
+    padding: 1px 4px;
+    margin: 0 1px;
+    background-color: rgba(175, 184, 193, 0.2);
+    border-radius: 3px;
+    color: #e83e8c;
+    font-weight: 500;
+  }
+
+  // 代码块样式 - 紧凑美观
+  pre {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    overflow-x: auto;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      border-radius: 6px 6px 0 0;
+    }
+    
+    code {
+      background: none;
+      color: #2f3337;
+      padding: 0;
+      margin: 0;
+      border-radius: 0;
+      font-weight: normal;
+      font-size: inherit;
+    }
+    
+    // 滚动条美化
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 3px;
+      
+      &:hover {
+        background: rgba(0, 0, 0, 0.5);
+      }
+    }
+  }
+
+  // 引用块样式 - 优雅紧凑
+  blockquote {
+    margin: 12px 0;
+    padding: 12px 16px;
+    border-left: 4px solid #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    border-radius: 0 6px 6px 0;
+    color: #586069;
+    font-style: italic;
+    position: relative;
+    
+    &::before {
+      content: '"';
+      font-size: 36px;
+      color: rgba(102, 126, 234, 0.3);
+      position: absolute;
+      top: -5px;
+      left: 10px;
+      font-family: Georgia, serif;
+      line-height: 1;
+    }
+    
+    p {
+      margin: 4px 0;
+      padding-left: 20px;
+      
+      &:first-child {
+        margin-top: 0;
+      }
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // 表格样式 - 紧凑现代化设计
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 12px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    
+    th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+      padding: 8px 12px;
+      text-align: left;
+      border: none;
+      
+      &:first-child {
+        border-radius: 6px 0 0 0;
+      }
+      
+      &:last-child {
+        border-radius: 0 6px 0 0;
+      }
+    }
+    
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: top;
+    }
+    
+    tbody tr {
+      transition: background-color 0.2s ease;
+      
+      &:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+      
+      &:hover {
+        background-color: rgba(102, 126, 234, 0.1);
+      }
+      
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
+
+  // 分割线样式 - 简洁优雅
+  hr {
+    height: 0;
+    border: none;
+    border-top: 1px solid transparent;
+    background: linear-gradient(90deg, transparent 0%, #667eea 20%, #764ba2 80%, transparent 100%);
+    margin: 16px 0;
+    border-radius: 1px;
+  }
+
+  // 链接样式 - 现代感十足
+  a {
+    color: #667eea;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      color: #764ba2;
+      border-bottom-color: #764ba2;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      padding: 1px 3px;
+      border-radius: 3px;
+      margin: -1px -3px;
+    }
+  }
+
+  // 强调样式 - 突出重点
+  strong, b {
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  em, i {
+    font-style: italic;
+    color: #586069;
+  }
+
+  // 删除线样式
+  del, s {
+    text-decoration: line-through;
+    color: #6a737d;
+    opacity: 0.8;
+  }
+
+  // 图片样式 - 响应式和美观
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 8px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.01);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  // 任务列表样式 - GitHub风格
+  input[type="checkbox"] {
+    margin-right: 6px;
+    accent-color: #667eea;
+  }
+
+  .task-list-item {
+    list-style: none;
+    
+    input[type="checkbox"] {
+      margin-left: -20px;
+      margin-right: 6px;
+    }
+  }
+
+  // 键盘按键样式
+  kbd {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #adb5bd;
+    border-radius: 3px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
+    color: #333;
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    line-height: 1.3;
+    padding: 1px 4px;
+    white-space: nowrap;
+    margin: 0 1px;
+  }
+
+  // 标记高亮样式
+  mark {
+    background: linear-gradient(135deg, rgba(255, 235, 59, 0.8) 0%, rgba(255, 193, 7, 0.8) 100%);
+    color: #1a1a1a;
+    padding: 1px 3px;
+    border-radius: 2px;
+  }
+
+  // 响应式调整
+  @media (max-width: 768px) {
+    font-size: 13px;
+    line-height: 1.4;
+    
+    h1 { font-size: 20px; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 16px; }
+    h4 { font-size: 15px; }
+    h5 { font-size: 13px; }
+    h6 { font-size: 12px; }
+    
+    p {
+      margin: 6px 0;
+    }
+    
+    ul, ol {
+      padding-left: 20px;
+    }
+    
+    pre {
+      padding: 8px 12px;
+      font-size: 11px;
+      margin: 8px 0;
+    }
+    
+    blockquote {
+      padding: 8px 12px;
+      margin: 8px 0;
+    }
+    
+    table {
+      font-size: 11px;
+      
+      th, td {
+        padding: 6px 8px;
+      }
+    }
+  }
+
+  // 暗色主题支持
+  &.dark-theme {
+    color: #e1e4e8;
+    
+    h1, h2, h3, h4, h5, h6 {
+      color: #ffffff;
+    }
+    
+    h1, h2 {
+      border-bottom-color: #30363d;
+    }
+    
+    h5, h6 {
+      color: #8b949e;
+    }
+    
+    code {
+      background-color: rgba(110, 118, 129, 0.4);
+      color: #f8f8f2;
+    }
+    
+    pre {
+      background: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+      border-color: #30363d;
+      
+      code {
+        color: #e1e4e8;
+      }
+    }
+    
+    blockquote {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+      color: #8b949e;
+    }
+    
+    table {
+      th {
+        background: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+      }
+      
+      td {
+        border-bottom-color: #30363d;
+      }
+      
+      tbody tr:nth-child(even) {
+        background-color: #161b22;
+      }
+      
+      tbody tr:hover {
+        background-color: rgba(102, 126, 234, 0.2);
+      }
+    }
+    
+    a {
+      color: #58a6ff;
+      
+      &:hover {
+        color: #79c0ff;
+        border-bottom-color: #79c0ff;
+        background: linear-gradient(135deg, rgba(88, 166, 255, 0.15) 0%, rgba(121, 192, 255, 0.15) 100%);
+      }
+    }
+    
+    strong, b {
+      color: #ffffff;
+    }
+    
+    em, i {
+      color: #8b949e;
+    }
+    
+    del, s {
+      color: #6e7681;
+    }
+    
+    kbd {
+      background: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+      border-color: #6e7681;
+      color: #e1e4e8;
+    }
+    
+    mark {
+      background: linear-gradient(135deg, rgba(187, 134, 252, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%);
+      color: #ffffff;
+    }
+  }
+} 

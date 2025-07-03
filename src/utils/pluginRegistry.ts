@@ -1,5 +1,6 @@
 import { inject, provide } from 'vue';
 import type { App, Component } from 'vue';
+import { logger } from './logger';
 
 // 插件注册表键名
 export const PLUGIN_REGISTRY_KEY = 'liaoPlugins';
@@ -45,7 +46,7 @@ export function usePluginRegistry() {
 // 注册单个插件
 export function registerPlugin(type: string, component: Component) {
   if (!type || !component) {
-    console.warn('插件注册失败：类型或组件无效', { type, component });
+    logger.warn('插件注册失败：类型或组件无效', { type, component });
     return component;
   }
   
@@ -56,7 +57,7 @@ export function registerPlugin(type: string, component: Component) {
 // 批量注册插件
 export function registerPlugins(plugins: Record<string, Component>) {
   if (!plugins || typeof plugins !== 'object') {
-    console.warn('批量注册插件失败：插件对象无效', plugins);
+    logger.warn('批量注册插件失败：插件对象无效', plugins);
     return;
   }
   
