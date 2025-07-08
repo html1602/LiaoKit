@@ -1,63 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LiaoKit 多窗口预览 - 企业级智能客服系统</title>
-  <meta name="description" content="体验LiaoKit多窗口管理组件的强大功能，企业级智能客服解决方案">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      background-color: #f8fafc;
-    }
-    
-    #app {
-      width: 100%;
-      height: 100vh;
-    }
-    
-    /* 加载状态 */
-    .loading {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      font-size: 18px;
-      color: #666;
-    }
-    
-    .loading::after {
-      content: '';
-      width: 20px;
-      height: 20px;
-      margin-left: 10px;
-      border: 2px solid #e2e8f0;
-      border-top: 2px solid #2669ff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
-</head>
-<body>
-  <div id="app">
-    <div class="loading">正在加载 LiaoKit 多窗口预览...</div>
-  </div>
-  <script type="module" src="/src/examples/main.ts"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiaoKit Demo - Vue 3 组件库演示</title>
+    <meta name="description" content="LiaoKit企业级Vue 3组件库演示页面，展示组件功能和用法">
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/examples/main.ts"></script>
+  </body>
 </html> 

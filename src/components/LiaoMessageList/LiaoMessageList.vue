@@ -46,10 +46,10 @@
             <button
               class="liao-message-list-load-more-btn"
               @click="handleLoadMore"
-              :disabled="loadingMore"
+              :disabled="effectiveLoadingMore"
             >
-              <LiaoIcon v-if="loadingMore" name="loading" spin size="small" />
-              <span>{{ loadingMore ? '加载中...' : loadMoreText }}</span>
+              <LiaoIcon v-if="effectiveLoadingMore" name="loading" spin size="small" />
+              <span>{{ effectiveLoadingMore ? '加载中...' : loadMoreText }}</span>
             </button>
           </slot>
         </div>
@@ -205,8 +205,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted, onUnmounted, computed, nextTick, readonly } from 'vue';
-import type { PropType } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed, nextTick, readonly, type PropType } from 'vue';
 import LiaoMessageBubble from '../LiaoMessageBubble/LiaoMessageBubble.vue';
 import LiaoImageBubble from '../LiaoMessageBubble/LiaoImageBubble.vue';
 import LiaoIcon from '../LiaoIcon/LiaoIcon.vue';
@@ -270,6 +269,11 @@ const props = defineProps({
   loadingMore: {
     type: Boolean,
     default: false
+  },
+  // 新增：是否启用自动检测历史消息加载（默认开启）
+  autoDetectHistoryLoading: {
+    type: Boolean,
+    default: true
   },
   emptyText: {
     type: String,
@@ -381,6 +385,10 @@ const lastScrollTop = ref(0); // 存储上次滚动位置，用于判断滚动�
 const showNewMessageTip = ref(false);
 const newMessageCount = ref(0);
 const newMessagesStartIndex = ref(-1); // 记录新消息起始索引
+
+// 添加一个标记，用于跟踪最近是否加载了历史消息
+const recentlyLoadedHistory = ref(false);
+const historyLoadTimer = ref<number | null>(null);
 
 // AI 适配器状态
 const adaptedMessages = ref<Message[]>([]);
@@ -856,33 +864,157 @@ const scrollToFirstNewMessage = async () => {
   }, 500);
 };
 
-// 监听消息变化 - 使用适配后的消息
+// 新增：自动检测是否正在加载历史消息
+const isLoadingHistory = ref(false);
+
+// 监听消息数组的变化，自动检测是否正在加载历史消息
+watch(
+  () => props.messages,
+  (newMessages, oldMessages) => {
+    // 如果未启用自动检测，或者用户明确设置了loadingMore，则使用用户设置的值
+    if (!props.autoDetectHistoryLoading || props.loadingMore !== undefined) {
+      return;
+    }
+    
+    // 如果消息数量减少了，可能是重置了消息列表，不认为是加载历史消息
+    if (!oldMessages || !newMessages || newMessages.length <= oldMessages.length) {
+      isLoadingHistory.value = false;
+      return;
+    }
+    
+    // 检查新增的消息是否添加在开头（历史消息）
+    // 1. 比较第一条消息是否变化
+    if (oldMessages.length > 0 && newMessages.length > 0) {
+      const firstOldMessage = oldMessages[0];
+      const firstNewMessage = newMessages[0];
+      
+      // 如果第一条消息发生了变化，很可能是加载了历史消息
+      if (firstOldMessage !== firstNewMessage) {
+        // 检查ID是否变化
+        if (firstOldMessage.id && firstNewMessage.id && firstOldMessage.id !== firstNewMessage.id) {
+          logger.debug('🔄 [自动检测] 第一条消息ID变化，可能是加载了历史消息');
+          isLoadingHistory.value = true;
+          return;
+        }
+        
+        // 检查时间戳，如果新的第一条消息时间早于旧的第一条，说明是历史消息
+        if (firstOldMessage.time && firstNewMessage.time) {
+          const oldTime = new Date(firstOldMessage.time).getTime();
+          const newTime = new Date(firstNewMessage.time).getTime();
+          
+          if (newTime < oldTime) {
+            logger.debug('🔄 [自动检测] 第一条消息时间较早，可能是加载了历史消息');
+            isLoadingHistory.value = true;
+            return;
+          }
+        }
+      }
+    }
+    
+    // 如果新增的消息数量超过3条，且添加在开头，可能是批量加载历史消息
+    const addedCount = newMessages.length - oldMessages.length;
+    if (addedCount >= 3) {
+      // 检查最后几条消息是否相同，如果相同，说明新消息是添加在开头的
+      const lastOldMessage = oldMessages[oldMessages.length - 1];
+      const correspondingNewMessage = newMessages[newMessages.length - oldMessages.length - 1 + oldMessages.length];
+      
+      if (lastOldMessage && correspondingNewMessage && 
+          JSON.stringify(lastOldMessage) === JSON.stringify(correspondingNewMessage)) {
+        logger.debug('🔄 [自动检测] 批量消息添加在开头，可能是加载了历史消息');
+        isLoadingHistory.value = true;
+        return;
+      }
+    }
+    
+    // 默认不是加载历史消息
+    isLoadingHistory.value = false;
+  },
+  { immediate: true, deep: true }
+);
+
+// 计算得到的最终loadingMore状态（用户设置的或自动检测的）
+const effectiveLoadingMore = computed(() => {
+  return props.loadingMore || (props.autoDetectHistoryLoading && isLoadingHistory.value);
+});
+
+// 修改监听loadingMore属性变化的逻辑，使用effectiveLoadingMore
+watch(
+  () => effectiveLoadingMore.value,
+  (isLoading) => {
+    if (isLoading) {
+      // 开始加载历史消息时，重置新消息提示状态
+      logger.debug('🔄 [历史消息加载] 开始加载历史消息，重置新消息提示状态');
+      newMessageCount.value = 0;
+      showNewMessageTip.value = false;
+      newMessagesStartIndex.value = -1;
+      
+      // 设置历史消息加载标记
+      recentlyLoadedHistory.value = true;
+      
+      // 清除之前的定时器
+      if (historyLoadTimer.value) {
+        window.clearTimeout(historyLoadTimer.value);
+      }
+    } else {
+      // 历史消息加载完成，记录当前消息数量，用于后续判断新消息
+      logger.debug('🔄 [历史消息加载] 历史消息加载完成，保持历史消息标记一段时间');
+      
+      // 历史消息加载完成后，保持标记一段时间，然后再重置
+      // 这样可以确保在消息数量变化监听器中能够正确识别刚加载完成的历史消息
+      if (historyLoadTimer.value) {
+        window.clearTimeout(historyLoadTimer.value);
+      }
+      
+      historyLoadTimer.value = window.setTimeout(() => {
+        logger.debug('🔄 [历史消息加载] 历史消息标记超时，重置为false');
+        recentlyLoadedHistory.value = false;
+      }, 500); // 给足够的时间让消息数量变化监听器处理
+    }
+  }
+);
+
+// 修改消息变化监听逻辑，使用effectiveLoadingMore
 watch(
   () => adaptedMessages.value.length, // 监听适配后的消息数组长度变化
   (newLength, oldLength) => {
-    // 新增：如果正在加载历史消息（由父组件传入的 loadingMore 为 true），则直接返回，避免误触发新消息提示。
-    if (props.loadingMore) {
+    // 如果正在加载历史消息，或者最近刚加载完历史消息，直接返回，避免误触发新消息提示
+    if (effectiveLoadingMore.value || recentlyLoadedHistory.value) {
+      logger.debug('🔄 [新消息检测] 正在加载历史消息或刚加载完成，跳过新消息提示');
+      // 重置新消息提示状态，确保历史消息加载时不会显示新消息提示
+      newMessageCount.value = 0;
+      showNewMessageTip.value = false;
       return;
     }
-    // console.log('适配后消息数组长度变化:', { newLength, oldLength });
     
     // 仅在有新增消息时处理
     if (newLength <= oldLength) {
-      // console.log('没有新消息，不处理');
+      logger.debug('🔄 [新消息检测] 没有新增消息，跳过处理');
       return;
     }
 
     // 计算新增消息数量
     const addedCount = newLength - oldLength;
-    // console.log('新增消息数量:', addedCount);
+    logger.debug('🔄 [新消息检测] 新增消息数量:', addedCount);
+    
+    // 检查新增消息是否添加在末尾（真正的新消息）而非开头（历史消息）
+    const isAppendedAtEnd = checkIfMessagesAppendedAtEnd(adaptedMessages.value, oldLength);
+    
+    // 如果不是末尾添加的消息（可能是历史消息），则不显示新消息提示
+    if (!isAppendedAtEnd) {
+      logger.debug('🔄 [新消息检测] 消息添加在开头，可能是历史消息，跳过新消息提示');
+      // 重置新消息提示状态，确保历史消息加载时不会显示新消息提示
+      newMessageCount.value = 0;
+      showNewMessageTip.value = false;
+      return;
+    }
     
     // 检查是否在底部
     const atBottom = isNearBottom();
-    // console.log('是否在底部:', atBottom);
+    logger.debug('🔄 [新消息检测] 是否在底部:', atBottom);
     
     // 检查最新消息是否是自己发送的
     const isSelfMessage = adaptedMessages.value[newLength - 1]?.isSelf;
-    // console.log('是自己的消息吗:', isSelfMessage);
+    logger.debug('🔄 [新消息检测] 是自己的消息吗:', isSelfMessage);
     
     if (atBottom || isSelfMessage) {
       nextTick(() => {
@@ -891,29 +1023,100 @@ watch(
       // 重置新消息提示
       newMessageCount.value = 0;
       showNewMessageTip.value = false;
-      // console.log('在底部或是自己的消息，不显示新消息提示');
+      logger.debug('🔄 [新消息检测] 在底部或是自己的消息，不显示新消息提示');
     } else {
       // 不在底部，显示新消息提示
-      // console.log('不在底部，显示新消息提示');
+      logger.debug('🔄 [新消息检测] 不在底部，显示新消息提示');
       if (newMessagesStartIndex.value === -1) {
         // 第一次收到新消息，记录起始索引
         newMessagesStartIndex.value = oldLength;
-        // console.log('设置新消息起始索引:', newMessagesStartIndex.value);
+        logger.debug('🔄 [新消息检测] 设置新消息起始索引:', newMessagesStartIndex.value);
       }
       
       // 更新新消息计数
       newMessageCount.value += addedCount;
       showNewMessageTip.value = true;
       
-      // 输出状态检查
-      // console.log('新消息提示状态:', {
-      //   showNewMessageTip: showNewMessageTip.value,
-      //   newMessageCount: newMessageCount.value,
-      //   newMessagesStartIndex: newMessagesStartIndex.value
-      // });
+      logger.debug('🔄 [新消息检测] 新消息提示状态:', {
+        showNewMessageTip: showNewMessageTip.value,
+        newMessageCount: newMessageCount.value,
+        newMessagesStartIndex: newMessagesStartIndex.value
+      });
     }
   }
 );
+
+// 检查新消息是否添加在末尾而非开头
+const checkIfMessagesAppendedAtEnd = (messages, oldLength) => {
+  // 如果消息数量太少，无法判断，默认为末尾添加
+  if (oldLength <= 0 || messages.length <= 0) {
+    return true;
+  }
+  
+  try {
+    // 检查第一条新消息是否是历史消息
+    // 如果消息列表长度增加了，但第一条消息ID/时间变化了，说明是在开头添加了消息（历史消息）
+    const firstNewMessage = messages[0];
+    const firstOldMessage = adaptedMessages.value[0]; // 使用之前的第一条消息进行比较
+    
+    // 如果第一条消息发生了变化，很可能是加载了历史消息
+    if (firstNewMessage && firstOldMessage && firstNewMessage !== firstOldMessage) {
+      if (firstNewMessage.id && firstOldMessage.id && firstNewMessage.id !== firstOldMessage.id) {
+        logger.debug('🔍 [历史消息检测] 第一条消息ID变化，可能是历史消息');
+        return false;
+      }
+      
+      // 比较时间戳，如果新的第一条消息时间早于旧的第一条，说明是历史消息
+      if (firstNewMessage.time && firstOldMessage.time) {
+        const newFirstTime = new Date(firstNewMessage.time).getTime();
+        const oldFirstTime = new Date(firstOldMessage.time).getTime();
+        if (newFirstTime < oldFirstTime) {
+          logger.debug('🔍 [历史消息检测] 第一条消息时间较早，可能是历史消息');
+          return false;
+        }
+      }
+    }
+    
+    // 获取最后一条新消息
+    const lastNewMessage = messages[messages.length - 1];
+    // 获取最后一条旧消息（添加新消息前的最后一条）
+    const lastOldMessage = messages[oldLength - 1];
+    
+    // 如果消息有ID，比较ID
+    if (lastNewMessage.id && lastOldMessage.id) {
+      // 如果最后一条新消息的ID与最后一条旧消息的ID相同，说明新消息不是添加在末尾
+      const result = lastNewMessage.id !== lastOldMessage.id;
+      logger.debug('🔍 [历史消息检测] 通过ID比较判断:', {
+        lastNewMessageId: lastNewMessage.id,
+        lastOldMessageId: lastOldMessage.id,
+        isAppendedAtEnd: result
+      });
+      return result;
+    }
+    
+    // 如果消息有时间戳，比较时间戳
+    if (lastNewMessage.time && lastOldMessage.time) {
+      const newTime = new Date(lastNewMessage.time).getTime();
+      const oldTime = new Date(lastOldMessage.time).getTime();
+      // 如果最后一条新消息的时间晚于最后一条旧消息的时间，说明是添加在末尾
+      const result = newTime >= oldTime;
+      logger.debug('🔍 [历史消息检测] 通过时间戳比较判断:', {
+        lastNewMessageTime: newTime,
+        lastOldMessageTime: oldTime,
+        isAppendedAtEnd: result
+      });
+      return result;
+    }
+    
+    // 如果没有可靠的方式判断，默认为末尾添加
+    logger.debug('🔍 [历史消息检测] 无法通过ID或时间戳判断，默认为新消息');
+    return true;
+  } catch (error) {
+    logger.error('🔄 [新消息检测] 检查消息添加位置出错:', error);
+    // 出错时默认为末尾添加
+    return true;
+  }
+};
 
 // 在用户滚动到底部时重置新消息提示
 watch(

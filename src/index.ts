@@ -1,9 +1,8 @@
-import type { App } from 'vue';
+import { type App } from 'vue';
 
 // 导入所有组件
 import LiaoButton from './components/LiaoButton/LiaoButton.vue';
 import LiaoIcon from './components/LiaoIcon/LiaoIcon.vue';
-import LiaoAvatar from './components/LiaoAvatar/LiaoAvatar.vue';
 import LiaoMessageList from './components/LiaoMessageList/LiaoMessageList.vue';
 import LiaoWindow from './components/LiaoWindow/LiaoWindow.vue';
 
@@ -21,7 +20,6 @@ export type {
 const components = [
   LiaoButton,
   LiaoIcon,
-  LiaoAvatar,
   LiaoMessageList,
   LiaoWindow,
 ];
@@ -40,7 +38,6 @@ const install = (app: App) => {
 export {
   LiaoButton,
   LiaoIcon,
-  LiaoAvatar,
   LiaoMessageList,
   LiaoWindow,
   install
@@ -49,8 +46,8 @@ export {
 // 默认导出，支持 Vue.use()
 export default {
   install,
-  version: '2.6.1'
+  version: '2.8.5'
 };
 
 // 导入样式
-import './styles/index.scss'; 
+import './styles/main.scss'; 
