@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, provide, watch } from 'vue';
+import { ref, computed, provide, watch, nextTick } from 'vue';
 import type { PropType } from 'vue';
 import LiaoWindowHeader from '../LiaoWindowHeader/LiaoWindowHeader.vue';
 import type { SessionMode, LockReason, ActivePlugin, LiaoSessionState } from '../../types/session';
@@ -133,7 +133,8 @@ const emit = defineEmits([
   'plugin-complete',
   'plugin-cancel',
   'plugin-error',
-  'emergency-unlock'
+  'emergency-unlock',
+  'auto-focus-input'
 ]);
 
 // === 全局状态管理 ===
@@ -188,6 +189,11 @@ const unlockInput = () => {
   }
   
   emit('input-lock-change', { locked: false, reason: null, plugin: null });
+  
+  // 解锁后自动聚焦输入框，提升用户体验
+  nextTick(() => {
+    emit('auto-focus-input');
+  });
 };
 
 // 紧急解锁
@@ -318,4 +324,4 @@ defineExpose({
     padding: $spacing-md;
   }
 }
-</style> 
+</style>

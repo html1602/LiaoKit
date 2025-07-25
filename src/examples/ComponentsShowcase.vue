@@ -31,10 +31,12 @@
     <main class="liao-showcase-content">
       <div class="liao-showcase-main-view" :class="[`liao-showcase-view-${viewMode}`]">
         <LiaoWindow
+          ref="windowRef"
           :width="viewMode === 'desktop' ? '900px' : '375px'"
           :height="viewMode === 'desktop' ? '600px' : '700px'"
           :rounded="true"
           :shadow="true"
+          @auto-focus-input="handleAutoFocusInput"
         >
           <template #header>
             <LiaoWindowHeader
@@ -71,6 +73,7 @@
           />
 
           <LiaoInputArea
+            ref="inputAreaRef"
             v-model="inputValue"
             @input="onInputChange"
             @send="sendMessage"
@@ -788,6 +791,8 @@ const viewMode = ref('desktop');
 
 // 消息列表引用
 const messageListRef = ref(null);
+const windowRef = ref(null);
+const inputAreaRef = ref(null);
 
 // 状态
 const loading = ref(false);
@@ -1882,6 +1887,12 @@ const handleAIStreamingReply = (userContent: string) => {
   inputLocked.value = true;
   isStreaming.value = true;
   
+  // 将最后一条用户消息状态更新为已发送
+  const lastUserMessageIndex = messages.value.length - 1;
+  if (lastUserMessageIndex >= 0 && messages.value[lastUserMessageIndex].isSelf) {
+    messages.value[lastUserMessageIndex].status = 'sent';
+  }
+  
   // 模拟思考延迟
   setTimeout(() => {
     // 创建AI回复消息
@@ -1893,6 +1904,7 @@ const handleAIStreamingReply = (userContent: string) => {
       avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
       name: '🤖 AI助手',
       time: new Date(),
+      status: 'streaming', // 设置为流式状态
     };
     
     messages.value.push(aiReply);
@@ -1923,6 +1935,12 @@ const handleAIStreamingReply = (userContent: string) => {
 
 // 人工模式即时回复
 const handleHumanReply = (userContent: string) => {
+  // 将最后一条用户消息状态更新为已发送
+  const lastUserMessageIndex = messages.value.length - 1;
+  if (lastUserMessageIndex >= 0 && messages.value[lastUserMessageIndex].isSelf) {
+    messages.value[lastUserMessageIndex].status = 'sent';
+  }
+  
   // 模拟人工客服回复延迟（较短）
   setTimeout(() => {
     const humanReplies = [
@@ -1991,18 +2009,26 @@ const startStreamingOutput = (fullContent: string) => {
       clearInterval(streamInterval);
       isStreaming.value = false;
       inputLocked.value = false;
-      streamingMessageId.value = null;
-      streamingContent.value = '';
+      loading.value = false; // 清除loading状态
       
-      // 添加快捷操作到完成的消息
+      // 添加快捷操作到完成的消息并更新状态（在清空streamingMessageId之前）
       const messageIndex = messages.value.findIndex(msg => msg.id === streamingMessageId.value);
       if (messageIndex !== -1) {
+        messages.value[messageIndex].status = 'sent'; // 更新状态为已发送
         messages.value[messageIndex].quickActions = [
           { id: 'list', text: '订单列表', label: '订单列表' },
           { id: 'info', text: '订单详情', label: '订单详情' },
           { id: 'timeline', text: '物流信息', label: '物流信息' },
           { id: 'faq', text: '常见问题', label: '常见问题' }
         ];
+      }
+      
+      streamingMessageId.value = null;
+      streamingContent.value = '';
+      
+      // 调用窗口组件的unlockInput方法以触发自动聚焦
+      if (windowRef.value) {
+        (windowRef.value as any).unlockInput();
       }
     }
   }, 50); // 每50ms输出一次
@@ -2988,6 +3014,19 @@ const onInputChange = (e: Event) => {
   // 手动更新inputValue
   inputValue.value = value;
 };
+
+// 处理自动聚焦事件
+const handleAutoFocusInput = () => {
+  console.log('收到自动聚焦事件，准备聚焦输入框');
+  if (inputAreaRef.value) {
+    (inputAreaRef.value as any).focusInput();
+    console.log('已调用输入区域的focusInput方法');
+  } else {
+    console.warn('inputAreaRef未找到，无法执行自动聚焦');
+  }
+};
+
+// 演示区输入变化事件处理器（防止干扰主要功能）
 
 // 演示区输入变化事件处理器
 const onDemoInputChange = (e: Event) => {
@@ -4589,4 +4628,4 @@ const activeTab = ref('debugger'); // 默认显示调试器
   padding: 16px;
   background-color: #fff;
 }
-</style> 
+</style>

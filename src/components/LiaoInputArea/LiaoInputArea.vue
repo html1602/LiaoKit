@@ -727,6 +727,21 @@ onBeforeUnmount(() => {
   }
   document.removeEventListener('click', handleOutsideClick);
 });
+
+// 聚焦输入框方法
+const focusInput = () => {
+  if (textareaRef.value && !effectiveDisabled.value) {
+    textareaRef.value.focus();
+    isFocused.value = true;
+    console.log('🎯 [LiaoInputArea] 自动聚焦输入框');
+  }
+};
+
+// 暴露方法给父组件
+defineExpose({
+  focusInput,
+  textareaRef
+});
 </script>
 
 <style lang="scss" scoped>
@@ -1125,4 +1140,4 @@ onBeforeUnmount(() => {
     }
   }
 }
-</style> 
+</style>
