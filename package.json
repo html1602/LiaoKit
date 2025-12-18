@@ -1,7 +1,7 @@
 {
   "name": "@yuandezuohua/liaokit",
   "private": false,
-  "version": "2.8.7",
+  "version": "2.8.8",
   "description": "LiaoKit - 现代化Vue3组件库，支持AI智能消息适配和多窗口系统",
   "type": "module",
   "main": "./dist/liaokit.umd.cjs",
