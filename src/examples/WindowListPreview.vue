@@ -19,7 +19,7 @@
             <LiaoIcon name="message" />
             模拟消息
           </LiaoButton>
-          <LiaoButton @click="simulateFileUpload" type="info">
+          <LiaoButton @click="simulateFileUpload" type="default">
             <LiaoIcon name="file" />
             模拟文件
           </LiaoButton>

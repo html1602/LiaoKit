@@ -316,16 +316,16 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits([
-  'update:modelValue', 
-  'send', 
-  'focus',
-  'blur',
-  'file-upload',
-  'voice-record',
-  'emoji-select',
-  'camera-capture'
-]);
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void;
+  (e: 'send', text: string): void;
+  (e: 'focus'): void;
+  (e: 'blur'): void;
+  (e: 'file-upload', files: FileList): void;
+  (e: 'voice-record', event: { status: 'start' | 'stop' | 'cancel' }): void;
+  (e: 'emoji-select', emoji: Emoji): void;
+  (e: 'camera-capture'): void;
+}>();
 
 // 注入全局状态管理
 const sessionState = inject<LiaoSessionState | null>(LIAO_SESSION_STATE_KEY, null);
@@ -737,8 +737,21 @@ const focusInput = () => {
   }
 };
 
+const focus = () => {
+  focusInput();
+};
+
+const clear = () => {
+  emit('update:modelValue', '');
+  selectedFiles.value = [];
+  nextTick(adjustTextareaHeight);
+};
+
 // 暴露方法给父组件
 defineExpose({
+  focus,
+  clear,
+  sendMessage,
   focusInput,
   textareaRef
 });

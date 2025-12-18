@@ -379,24 +379,44 @@ const demonstrateSSEReal = async () => {
   }
 };
 
-// 演示模拟SSE流式
+// 演示模拟SSE流式（细粒度 Markdown 流式展示）
 const demonstrateSSEMock = async () => {
   if (isDemo.value) return;
   isDemo.value = true;
   
   try {
-    addSystemMessage('🤖 开始模拟 SSE 流式传输...');
+    addSystemMessage('🤖 开始模拟 SSE 流式传输（Markdown 打字效果演示）...');
     
     const messageId = createStreamingMessage();
     
-    // 模拟SSE数据包
-    const sseData = [
-      '这是通过SSE传输的数据。',
-      '每个数据包会逐步发送，',
-      '模拟真实的服务器推送效果。',
-      '您可以看到内容是分批次接收的，',
-      '这就是SSE流式传输的特点。'
-    ];
+    // 模拟 SSE Markdown 内容
+    const markdownContent = [
+      '# ⚡ SSE 流式 Markdown 示例',
+      '',
+      '这个示例演示了 **markstream-vue** 在流式输出下的渲染效果：',
+      '',
+      '- 内容按较小片段持续追加',
+      '- 标题、列表、引用会逐步成型',
+      '- 适合展示 AI 回复的「打字机」体验',
+      '',
+      '```ts',
+      "function createStreamingDemo() {",
+      "  const messageId = createStreamingMessage();",
+      "  // 通过 appendToMessage 持续追加内容",
+      "}",
+      '```',
+      '',
+      '> 提示：可以切换到「基础流式」标签，体验不同流式策略。',
+      '',
+      '最后一行：**SSE 模拟流式传输完成！**'
+    ].join('\n');
+    
+    // 将 Markdown 内容拆分为较小片段，模拟更细粒度的 SSE 推送
+    const chunks: string[] = [];
+    const chunkSizeForDemo = 8;
+    for (let i = 0; i < markdownContent.length; i += chunkSizeForDemo) {
+      chunks.push(markdownContent.slice(i, i + chunkSizeForDemo));
+    }
     
     // 模拟连接状态变化
     connectionState.value = 'connecting';
@@ -405,15 +425,15 @@ const demonstrateSSEMock = async () => {
     connectionState.value = 'connected';
     addSystemMessage('✅ 模拟 SSE 连接已建立');
     
-    // 逐包发送数据
-    for (let i = 0; i < sseData.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      streamingManager.appendToMessage(messageId, sseData[i]);
+    // 逐片发送数据，形成打字效果
+    for (let i = 0; i < chunks.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 60));
+      streamingManager.appendToMessage(messageId, chunks[i]);
     }
     
     streamingManager.completeStreaming(messageId);
     connectionState.value = 'closed';
-    addSystemMessage('✅ 模拟 SSE 流式传输完成');
+    addSystemMessage('✅ 模拟 SSE 流式 Markdown 传输完成');
     
   } catch (error) {
     console.error('模拟SSE演示失败:', error);

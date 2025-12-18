@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import './style.css'
 import './styles/main.scss'
+import 'markstream-vue/index.css'
 import App from './App.vue'
 import router from './router'
 // 导入Vue应用程序创建函数和相关依赖

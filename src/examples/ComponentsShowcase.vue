@@ -782,6 +782,7 @@ import LiaoFileChipList from '../components/LiaoFileChipList/LiaoFileChipList.vu
 import LiaoFileBubble from '../components/LiaoMessageBubble/LiaoFileBubble.vue';
 import LiaoWindowList from '../components/LiaoWindowList/LiaoWindowList.vue';
 import AiMessageAdapterExample from './AiMessageAdapterExample.vue';
+import type { FileMeta } from '../types/file';
 
 // 导入调试组件
 import FilePreviewDebugger from './FilePreviewDebugger.vue';
@@ -3220,7 +3221,7 @@ const handleTimelineScenarioAction = (action: any) => {
 };
 
 // 文件上传演示相关
-const demoFiles = ref([
+const demoFiles = ref<FileMeta[]>([
   {
     id: 'demo-file-1',
     name: '设计规范文档.pdf',

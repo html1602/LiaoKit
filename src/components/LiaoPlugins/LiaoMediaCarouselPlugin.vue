@@ -216,9 +216,9 @@ const showControls = computed(() => props.pluginData.showControls !== false);
 const showIndicators = computed(() => props.pluginData.showIndicators !== false);
 const enableItemClick = computed(() => props.pluginData.enableItemClick !== false);
 
-// 获取首尾元素（用于克隆）
-const firstItem = computed(() => items.value[0] || {});
-const lastItem = computed(() => items.value[items.value.length - 1] || {});
+const fallbackItem: MediaItem = { type: 'image', url: '' };
+const firstItem = computed<MediaItem>(() => items.value[0] ?? fallbackItem);
+const lastItem = computed<MediaItem>(() => items.value[items.value.length - 1] ?? fallbackItem);
 
 // 轮播状态
 const currentIndex = ref(0);

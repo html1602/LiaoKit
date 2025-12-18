@@ -1,5 +1,7 @@
 # LiaoKit 组件指南目录
 
+> 提示：如果你是“组件库使用者”，请前往使用文档模块（User Guide）：`./../../docs-user/README.md`，该模块从使用视角提供快速开始、组件/插件说明、场景组合与 FAQ 等内容。本目录主要面向“开发向”与内部调试说明。
+
 ![版本](https://img.shields.io/badge/版本-2.8.5-blue.svg)
 ![最后更新](https://img.shields.io/badge/最后更新-2025--07--03-green.svg)
 

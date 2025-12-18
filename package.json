@@ -46,7 +46,9 @@
     "build": "vue-tsc -b && vite build",
     "build:lib": "vite build --mode library && copy lib.d.ts dist\\lib.d.ts",
     "preview": "vite preview",
-    "prepublishOnly": "npm run build:lib"
+    "prepublishOnly": "npm run build:lib",
+    "generate:docs": "node tools/generate-docs.js",
+    "generate:docs:ast": "node tools/generate-docs-ast.js"
   },
   "peerDependencies": {
     "vue": "^3.3.0"
@@ -55,6 +57,7 @@
     "@antv/g2plot": "^2.4.33",
     "@vueuse/motion": "^3.0.3",
     "marked": "^15.0.12",
+    "markstream-vue": "^0.0.3-beta.6",
     "openai": "^5.7.0",
     "sass": "^1.89.1",
     "unplugin-icons": "^22.1.0",

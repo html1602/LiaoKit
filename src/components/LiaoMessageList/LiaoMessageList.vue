@@ -351,27 +351,26 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits([
-  'load-more', 
-  'scroll', 
-  'scroll-to-top', 
-  'scroll-to-bottom',
-  'read-all',
-  'quick-action-click',
-  'plugin-action',
-  'plugin-complete',
-  'plugin-cancel',
-  'plugin-error',
-  'file-preview',
-  'file-download',
-  'file-click',
-  'file-retry',
-  'file-more',
-  // AI 适配相关事件
-  'adapter-success',
-  'adapter-error',
-  'adapter-fallback'
-]);
+const emit = defineEmits<{
+  (e: 'load-more'): void;
+  (e: 'scroll', event: { scrollTop: number; scrollHeight: number; clientHeight: number }): void;
+  (e: 'scroll-to-top'): void;
+  (e: 'scroll-to-bottom'): void;
+  (e: 'read-all'): void;
+  (e: 'quick-action-click', action: any): void;
+  (e: 'plugin-action', payload: { action: any; message: Message }): void;
+  (e: 'plugin-complete', payload: { message: Message; data: any }): void;
+  (e: 'plugin-cancel', payload: { message: Message; data: any }): void;
+  (e: 'plugin-error', payload: { message: Message; data: any }): void;
+  (e: 'file-preview', payload: { message: Message; file: any }): void;
+  (e: 'file-download', payload: { message: Message; file: any }): void;
+  (e: 'file-click', payload: { message: Message; file: any }): void;
+  (e: 'file-retry', payload: { message: Message; file: any }): void;
+  (e: 'file-more', payload: { message: Message; file: any }): void;
+  (e: 'adapter-success', event: { processed: number; cached: number; skipped: number; streaming: number; stats: any }): void;
+  (e: 'adapter-error', event: { error: string; originalMessages: Message[] }): void;
+  (e: 'adapter-fallback', event: { failedCount: number; total: number }): void;
+}>();
 
 const messageListRef = ref<HTMLElement | null>(null);
 const wrapperRef = ref<HTMLElement | null>(null); // 添加wrapper引用

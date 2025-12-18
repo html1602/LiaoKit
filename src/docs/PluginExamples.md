@@ -1010,3 +1010,7 @@ const timelinePluginMessage = {
 欢迎查阅[自定义插件开发指南](./CustomPluginDevelopment.md)以获取更详细的开发说明。
 
 如果您有其他插件需求或想法，请随时与我们联系。 
+
+---
+
+> 使用者提示：如果你是在寻找“组件库使用文档”（快速开始、组件/插件说明、场景组合与 FAQ），请前往 `../../docs-user/README.md`。

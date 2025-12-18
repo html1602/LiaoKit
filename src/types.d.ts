@@ -1,4 +1,5 @@
 // LiaoKit 组件库类型声明
+export {};
 declare module '@liaokit/components' {
   import { App, Plugin } from 'vue';
   

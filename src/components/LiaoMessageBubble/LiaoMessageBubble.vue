@@ -33,7 +33,14 @@
         }"
       >
         <slot>
-          <div v-if="enableMarkdown && isMarkdown" class="liao-markdown-content" v-html="renderedMarkdown"></div>
+          <MarkdownRender
+            v-if="enableMarkdown && isMarkdown"
+            :content="content"
+            :max-live-nodes="isStreaming ? 0 : undefined"
+            :batch-rendering="isStreaming"
+            :render-batch-size="isStreaming ? 16 : undefined"
+            :render-batch-delay="isStreaming ? 8 : undefined"
+          />
           <div v-else>{{ content }}</div>
         </slot>
       </div>
@@ -56,20 +63,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import type { PropType } from 'vue';
 import LiaoIcon from '../LiaoIcon/LiaoIcon.vue';
-import { marked } from 'marked';
+import MarkdownRender from 'markstream-vue';
 import { createComponentLogger } from '../../utils/logger';
 
 // 创建组件专用日志器
 const logger = createComponentLogger('MessageBubble');
-
-// 设置marked选项
-marked.setOptions({
-  breaks: true,
-  gfm: true
-});
 
 // 气泡消息状态类型
 type MessageStatus = 'sending' | 'sent' | 'failed' | 'streaming';
@@ -148,19 +149,7 @@ const isMarkdown = computed(() => {
   );
 });
 
-// 处理Markdown内容
-const renderedMarkdown = computed(() => {
-  if (!props.enableMarkdown || !isMarkdown.value) {
-    return props.content;
-  }
-  
-  try {
-    return marked(props.content);
-  } catch (e) {
-    logger.error('Markdown渲染错误:', e);
-    return props.content;
-  }
-});
+const isStreaming = computed(() => props.status === 'streaming');
 
 // 时间格式化
 const formattedTime = computed(() => {

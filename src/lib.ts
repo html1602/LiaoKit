@@ -1,5 +1,7 @@
 // LiaoKit 组件库 - 完整版入口，包含所有功能
 
+import 'markstream-vue/index.css';
+
 // 导入核心组件
 import LiaoButton from './components/LiaoButton/LiaoButton.vue';
 import LiaoIcon from './components/LiaoIcon/LiaoIcon.vue';
