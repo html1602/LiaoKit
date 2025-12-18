@@ -29,3 +29,9 @@ Docs/*
 *.njsproj
 *.sln
 *.sw?
+
+# Trae IDE
+.trae/
+
+# npm pack / publish artifacts
+*.tgz

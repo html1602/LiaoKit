@@ -5,6 +5,11 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.8.9] - 2025-12-18
+
+### 🐛 重要修复
+- **AI 模式输入框聚焦修复**：发送后不再异常失焦，AI 回复完成解锁后自动恢复聚焦（避免抢占用户在其他输入框的焦点）
+
 ## [2.8.5] - 2025-07-03
 
 ### 🎨 UI优化

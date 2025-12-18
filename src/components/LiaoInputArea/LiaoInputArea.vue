@@ -342,6 +342,7 @@ const isRecording = ref(false);
 const recordingCancelled = ref(false);
 const textareaHeight = ref('auto');
 const selectedFiles = ref<FileMeta[]>([]);
+const pendingFocusRestore = ref(false);
 
 // 设备检测 - 现在支持外部传入deviceType
 const isDesktop = ref(window.innerWidth >= 768);
@@ -389,6 +390,33 @@ const canSend = computed(() => {
   return hasText || hasFiles;
 });
 
+const shouldSkipAutoFocusDueToUserFocus = () => {
+  const activeElement = document.activeElement as HTMLElement | null;
+  if (!activeElement) return false;
+  if (activeElement === document.body || activeElement === document.documentElement) return false;
+  if (textareaRef.value && activeElement === textareaRef.value) return false;
+
+  const tagName = activeElement.tagName?.toLowerCase();
+  if (tagName === 'input' || tagName === 'textarea') return true;
+  if (activeElement.isContentEditable) return true;
+  return false;
+};
+
+const restoreFocusIfNeeded = () => {
+  if (!pendingFocusRestore.value) return;
+  if (effectiveDisabled.value) return;
+  if (shouldSkipAutoFocusDueToUserFocus()) {
+    pendingFocusRestore.value = false;
+    return;
+  }
+
+  focusInput();
+
+  if (textareaRef.value && document.activeElement === textareaRef.value) {
+    pendingFocusRestore.value = false;
+  }
+};
+
 // 监听属性变化
 watch(() => props.deviceType, (newValue) => {
   if (newValue === 'desktop') {
@@ -397,6 +425,20 @@ watch(() => props.deviceType, (newValue) => {
     isDesktop.value = false;
   }
 }, { immediate: true });
+
+watch(
+  () => effectiveDisabled.value,
+  (disabledNow) => {
+    if (disabledNow) {
+      if (isFocused.value || (textareaRef.value && document.activeElement === textareaRef.value)) {
+        pendingFocusRestore.value = true;
+      }
+      return;
+    }
+
+    nextTick(restoreFocusIfNeeded);
+  }
+);
 
 // 监听窗口尺寸变化
 onMounted(() => {
@@ -480,6 +522,7 @@ const updateInput = (e: Event) => {
 // 处理聚焦
 const handleFocus = () => {
   isFocused.value = true;
+  pendingFocusRestore.value = false;
   emit('focus');
   // 在状态变化后使用nextTick确保DOM已更新
   nextTick(adjustTextareaHeight);
@@ -552,7 +595,11 @@ const sendMessage = () => {
   }
   
   // 重置输入框高度
-  nextTick(adjustTextareaHeight);
+  pendingFocusRestore.value = true;
+  nextTick(() => {
+    adjustTextareaHeight();
+    restoreFocusIfNeeded();
+  });
 };
 
 // 切换表情选择器
